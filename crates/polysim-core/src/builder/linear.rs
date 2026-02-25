@@ -1,6 +1,10 @@
 use bigsmiles::{BigSmiles, BigSmilesSegment, StochasticObject};
 
-use crate::{error::PolySimError, polymer::PolymerChain};
+use crate::{
+    error::PolySimError,
+    polymer::PolymerChain,
+    properties::molecular_weight::{average_mass, monoisotopic_mass},
+};
 
 use super::strategy::BuildStrategy;
 
@@ -58,7 +62,7 @@ impl LinearBuilder {
         }
 
         let fragment = &stoch.repeat_units[0];
-        let n = self.resolve_n()?;
+        let n = self.resolve_n(&fragment.smiles_raw)?;
 
         if n == 0 {
             return Err(PolySimError::BuildStrategy(
@@ -67,7 +71,9 @@ impl LinearBuilder {
         }
 
         let smiles = build_linear_smiles(&fragment.smiles_raw, n)?;
-        Ok(PolymerChain::new(smiles, n, 0.0)) // Mn = 0.0 — MW calculation not yet implemented
+        let chain = PolymerChain::new(smiles, n, 0.0);
+        let mn = average_mass(&chain);
+        Ok(PolymerChain::new(chain.smiles, n, mn))
     }
 
     /// Generates a random (statistical) copolymer.
@@ -97,15 +103,14 @@ impl LinearBuilder {
         todo!("implement block copolymer generation")
     }
 
-    fn resolve_n(&self) -> Result<usize, PolySimError> {
+    fn resolve_n(&self, smiles_raw: &str) -> Result<usize, PolySimError> {
         match &self.strategy {
             BuildStrategy::ByRepeatCount(n) => Ok(*n),
-            BuildStrategy::ByTargetMn(_) | BuildStrategy::ByExactMass(_) => {
-                Err(PolySimError::BuildStrategy(
-                    "ByTargetMn / ByExactMass require molecular weight calculation \
-                     (not yet implemented)"
-                        .to_string(),
-                ))
+            BuildStrategy::ByTargetMn(target) => {
+                resolve_n_by_mass(smiles_raw, *target, average_mass)
+            }
+            BuildStrategy::ByExactMass(target) => {
+                resolve_n_by_mass(smiles_raw, *target, monoisotopic_mass)
             }
         }
     }
@@ -118,6 +123,35 @@ fn find_first_stochastic(bs: &BigSmiles) -> Option<&StochasticObject> {
         BigSmilesSegment::Stochastic(obj) => Some(obj),
         _ => None,
     })
+}
+
+/// Déduit le nombre de répétitions à partir d'une masse cible.
+///
+/// Construit deux chaînes d'essai (n=1 et n=2) pour déterminer la masse par
+/// unité et la masse des groupements terminaux, puis résout par extrapolation
+/// linéaire : MW(n) = n × mw_per_unit + mw_end.
+///
+/// `mass_fn` peut être [`average_mass`] (pour [`BuildStrategy::ByTargetMn`]) ou
+/// [`monoisotopic_mass`] (pour [`BuildStrategy::ByExactMass`]).
+fn resolve_n_by_mass(
+    smiles_raw: &str,
+    target: f64,
+    mass_fn: fn(&PolymerChain) -> f64,
+) -> Result<usize, PolySimError> {
+    let mw1 = mass_fn(&PolymerChain::new(
+        build_linear_smiles(smiles_raw, 1)?,
+        1,
+        0.0,
+    ));
+    let mw2 = mass_fn(&PolymerChain::new(
+        build_linear_smiles(smiles_raw, 2)?,
+        2,
+        0.0,
+    ));
+    let mw_per_unit = mw2 - mw1;
+    let mw_end = mw1 - mw_per_unit;
+    let n = ((target - mw_end) / mw_per_unit).round().max(1.0) as usize;
+    Ok(n)
 }
 
 /// Builds the SMILES string for a linear chain of `n` repeat units.

@@ -32,7 +32,8 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 [[package]]
 name = "bigsmiles"
 version = "0.1.1"
-source = "git+https://github.com/Peariforme/bigsmiles-rs#ba50de833e9691fadea140e35208027b21a2f1af"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5c5326d0c6f075092f9a052c9026dac17f0e5e7f9e3e18127581e9af4d37892"
 dependencies = [
  "opensmiles",
  "thiserror 1.0.69",
@@ -269,8 +270,9 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
 name = "opensmiles"
-version = "0.1.1"
-source = "git+https://github.com/Peariforme/bigsmiles-rs#ba50de833e9691fadea140e35208027b21a2f1af"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1caf6777dd076a20cb9ddfeb9acab8b277e89cc5e2ff90f72bd2d38bf9fb647d"
 dependencies = [
  "thiserror 1.0.69",
 ]
@@ -316,6 +318,7 @@ version = "0.1.0"
 dependencies = [
  "bigsmiles",
  "criterion",
+ "opensmiles",
  "thiserror 2.0.18",
 ]
 

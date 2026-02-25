@@ -13,8 +13,9 @@ repository.workspace = true
 homepage.workspace   = true
 
 [dependencies]
-bigsmiles = { workspace = true }
-thiserror = { workspace = true }
+bigsmiles  = { workspace = true }
+opensmiles = { workspace = true }
+thiserror  = { workspace = true }
 
 [dev-dependencies]
 bigsmiles = { workspace = true }
@@ -22,4 +23,8 @@ criterion = { workspace = true }
 
 [[bench]]
 name    = "homopolymer"
+harness = false
+
+[[bench]]
+name    = "molecular_weight"
 harness = false

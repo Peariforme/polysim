@@ -20,7 +20,7 @@
 //! ```rust
 //! use polysim_core::{parse, builder::{linear::LinearBuilder, BuildStrategy}};
 //!
-//! // Polyethylene — 10 repeat units
+//! // Polyéthylène — 10 unités répétées
 //! let bs = parse("{[]CC[]}").unwrap();
 //! let chain = LinearBuilder::new(bs, BuildStrategy::ByRepeatCount(10))
 //!     .homopolymer()
@@ -28,6 +28,8 @@
 //!
 //! assert_eq!(chain.repeat_count, 10);
 //! assert_eq!(chain.smiles, "CCCCCCCCCCCCCCCCCCCC");
+//! // La masse moléculaire moyenne (Mn) est calculée automatiquement
+//! assert!((chain.mn - 282.554).abs() < 0.01, "Mn = {} g/mol", chain.mn);
 //! ```
 
 pub mod builder;
