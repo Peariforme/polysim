@@ -4,26 +4,50 @@ use crate::{error::PolySimError, polymer::PolymerChain};
 
 use super::strategy::BuildStrategy;
 
-/// Builder pour les architectures polymères linéaires.
+/// Builder for linear polymer architectures.
+///
+/// Supports homopolymers, random/alternating/block copolymers — all derived
+/// from a single BigSMILES string.
 pub struct LinearBuilder {
     bigsmiles: BigSmiles,
     strategy: BuildStrategy,
 }
 
 impl LinearBuilder {
+    /// Creates a new builder from a parsed BigSMILES and a build strategy.
     pub fn new(bigsmiles: BigSmiles, strategy: BuildStrategy) -> Self {
-        Self { bigsmiles, strategy }
+        Self {
+            bigsmiles,
+            strategy,
+        }
     }
 
-    /// Génère un homopolymère linéaire (une seule unité de répétition).
+    /// Generates a linear homopolymer (single repeat unit, repeated *n* times).
     ///
-    /// # Erreurs
-    /// - [`PolySimError::NoStochasticObject`] si le BigSMILES ne contient pas d'objet stochastique.
-    /// - [`PolySimError::RepeatUnitCount`] si l'objet stochastique contient ≠ 1 unité de répétition.
-    /// - [`PolySimError::BuildStrategy`] si la stratégie produit n = 0.
+    /// # Errors
+    ///
+    /// - [`PolySimError::NoStochasticObject`] if the BigSMILES contains no
+    ///   stochastic object (`{...}`).
+    /// - [`PolySimError::RepeatUnitCount`] if the stochastic object contains ≠ 1
+    ///   repeat unit.
+    /// - [`PolySimError::BuildStrategy`] if the strategy yields *n* = 0.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use polysim_core::{parse, builder::{linear::LinearBuilder, BuildStrategy}};
+    ///
+    /// let bs = parse("{[]CC(C)[]}").unwrap(); // polypropylene
+    /// let chain = LinearBuilder::new(bs, BuildStrategy::ByRepeatCount(3))
+    ///     .homopolymer()
+    ///     .unwrap();
+    ///
+    /// assert_eq!(chain.smiles, "CC(C)CC(C)CC(C)");
+    /// assert_eq!(chain.repeat_count, 3);
+    /// ```
     pub fn homopolymer(&self) -> Result<PolymerChain, PolySimError> {
-        let stoch = find_first_stochastic(&self.bigsmiles)
-            .ok_or(PolySimError::NoStochasticObject)?;
+        let stoch =
+            find_first_stochastic(&self.bigsmiles).ok_or(PolySimError::NoStochasticObject)?;
 
         if stoch.repeat_units.len() != 1 {
             return Err(PolySimError::RepeatUnitCount {
@@ -38,15 +62,15 @@ impl LinearBuilder {
 
         if n == 0 {
             return Err(PolySimError::BuildStrategy(
-                "le nombre de répétitions doit être ≥ 1".to_string(),
+                "repeat count must be ≥ 1".to_string(),
             ));
         }
 
         let smiles = build_linear_smiles(&fragment.smiles_raw, n)?;
-        Ok(PolymerChain::new(smiles, n, 0.0)) // Mn = 0.0 — calcul MW non encore implémenté
+        Ok(PolymerChain::new(smiles, n, 0.0)) // Mn = 0.0 — MW calculation not yet implemented
     }
 
-    /// Build a random (statistical) copolymer.
+    /// Generates a random (statistical) copolymer.
     ///
     /// `fractions` — weight fraction of each repeat unit (must sum to 1.0).
     /// The BigSMILES must contain exactly `fractions.len()` repeat units.
@@ -58,14 +82,14 @@ impl LinearBuilder {
         todo!("implement random copolymer generation")
     }
 
-    /// Build an alternating copolymer (–A–B–A–B–).
+    /// Generates an alternating copolymer (–A–B–A–B–).
     ///
     /// The BigSMILES must contain exactly 2 repeat units.
     pub fn alternating_copolymer(&self) -> Result<PolymerChain, PolySimError> {
         todo!("implement alternating copolymer generation")
     }
 
-    /// Build a block copolymer (–AAAA–BBBB–).
+    /// Generates a block copolymer (–AAAA–BBBB–).
     ///
     /// `block_lengths` — number of repeat units per block, in order.
     /// The BigSMILES must contain exactly `block_lengths.len()` repeat units.
@@ -78,14 +102,16 @@ impl LinearBuilder {
             BuildStrategy::ByRepeatCount(n) => Ok(*n),
             BuildStrategy::ByTargetMn(_) | BuildStrategy::ByExactMass(_) => {
                 Err(PolySimError::BuildStrategy(
-                    "ByTargetMn / ByExactMass nécessitent le calcul de masse moléculaire (non encore implémenté)".to_string(),
+                    "ByTargetMn / ByExactMass require molecular weight calculation \
+                     (not yet implemented)"
+                        .to_string(),
                 ))
             }
         }
     }
 }
 
-// ── Helpers internes ─────────────────────────────────────────────────────────
+// --- internal helpers -------------------------------------------------------
 
 fn find_first_stochastic(bs: &BigSmiles) -> Option<&StochasticObject> {
     bs.segments.iter().find_map(|seg| match seg {
@@ -94,20 +120,20 @@ fn find_first_stochastic(bs: &BigSmiles) -> Option<&StochasticObject> {
     })
 }
 
-/// Construit le SMILES d'une chaîne linéaire de `n` unités de répétition.
+/// Builds the SMILES string for a linear chain of `n` repeat units.
 ///
-/// Les numéros de ring closure sont renommés pour chaque copie. En SMILES,
-/// un numéro de ring peut être réutilisé une fois qu'il est fermé — les copies
-/// étant auto-contenues, on cycle les offsets sur 1..99, ce qui permet des
-/// chaînes de longueur arbitraire.
+/// Ring closure numbers are renumbered for each copy. Because each copy is
+/// self-contained (every ring opened within a copy is also closed within that
+/// copy), the offsets cycle over 1..=99, allowing chains of arbitrary length.
 ///
-/// # Erreurs
-/// - [`PolySimError::RingNumberOverflow`] si le repeat unit lui-même contient > 99 ring closures
-///   (ce qui est déjà un SMILES invalide).
+/// # Errors
+///
+/// Returns [`PolySimError::RingNumberOverflow`] if the repeat unit itself uses
+/// more than 99 distinct ring-closure numbers (already invalid SMILES).
 fn build_linear_smiles(smiles_raw: &str, n: usize) -> Result<String, PolySimError> {
     let max_ring = max_ring_number(smiles_raw);
 
-    // Cas pathologique : le repeat unit seul dépasse déjà 99 ring numbers
+    // Pathological case: the repeat unit alone already overflows SMILES ring numbers.
     if max_ring > 99 {
         return Err(PolySimError::RingNumberOverflow {
             max_ring,
@@ -115,11 +141,11 @@ fn build_linear_smiles(smiles_raw: &str, n: usize) -> Result<String, PolySimErro
         });
     }
 
-    // Nombre de copies différentes avant de devoir recycler les ring numbers.
-    // Comme chaque copie ferme ses propres rings avant que la suivante commence,
-    // les numéros peuvent être réutilisés en toute sécurité.
+    // Number of distinct copies before ring numbers must be recycled.
+    // Since each copy closes its own rings before the next copy starts,
+    // the same numbers can be safely reused.
     let cycle_length: usize = if max_ring == 0 {
-        usize::MAX // pas de rings → pas de cycle nécessaire
+        usize::MAX // no ring closures — no cycling needed
     } else {
         99 / max_ring as usize
     };
@@ -133,8 +159,10 @@ fn build_linear_smiles(smiles_raw: &str, n: usize) -> Result<String, PolySimErro
     Ok(result)
 }
 
-/// Retourne le numéro de ring closure maximal utilisé dans un SMILES.
-/// Les chiffres à l'intérieur de `[...]` (isotopes, charges, etc.) sont ignorés.
+/// Returns the highest ring-closure number used in a SMILES string.
+///
+/// Digits inside `[...]` (isotopes, hydrogen counts, charges, atom classes)
+/// are ignored.
 fn max_ring_number(smiles: &str) -> u32 {
     let mut max = 0u32;
     let mut in_bracket = false;
@@ -146,7 +174,7 @@ fn max_ring_number(smiles: &str) -> u32 {
             ']' => in_bracket = false,
             _ if in_bracket => {}
             '%' => {
-                // Notation %dd
+                // Two-digit notation: %dd
                 let d1 = chars.next().unwrap_or('0');
                 let d2 = chars.next().unwrap_or('0');
                 if d1.is_ascii_digit() && d2.is_ascii_digit() {
@@ -163,10 +191,10 @@ fn max_ring_number(smiles: &str) -> u32 {
     max
 }
 
-/// Renumérote tous les ring closures d'un SMILES en ajoutant `offset`.
+/// Returns a copy of `smiles` with every ring-closure number incremented by `offset`.
 ///
-/// `offset = 0` retourne le SMILES inchangé.
-/// Les chiffres à l'intérieur de `[...]` ne sont jamais modifiés.
+/// When `offset` is 0 the string is returned unchanged.
+/// Digits inside `[...]` are never modified.
 fn renumber_ring_closures(smiles: &str, offset: u32) -> String {
     if offset == 0 {
         return smiles.to_string();

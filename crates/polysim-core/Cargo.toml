@@ -1,18 +1,23 @@
 [package]
 name        = "polysim-core"
+description = "Polymer structure generator and physical property simulator built on BigSMILES"
+keywords    = ["polymer", "smiles", "bigsmiles", "chemistry", "simulation"]
+categories  = ["science", "algorithms"]
+
 version.workspace    = true
 edition.workspace    = true
 license.workspace    = true
 authors.workspace    = true
 repository.workspace = true
+homepage.workspace   = true
 
 [dependencies]
 bigsmiles = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-bigsmiles  = { workspace = true }
-criterion  = { workspace = true }
+bigsmiles = { workspace = true }
+criterion = { workspace = true }
 
 [[bench]]
 name    = "homopolymer"

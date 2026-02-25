@@ -6,13 +6,15 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version      = "0.1.0"
-edition      = "2021"
-license      = "MIT"
-authors      = ["Peariforme"]
-repository   = "https://github.com/Peariforme/polysim"
+version    = "0.1.0"
+edition    = "2021"
+license    = "MIT"
+authors    = ["Peariforme"]
+repository = "https://github.com/Peariforme/polysim"
+homepage   = "https://github.com/Peariforme/polysim"
 
 [workspace.dependencies]
+# NOTE: switch to `bigsmiles = "0.1"` once the crate is available on crates.io.
 bigsmiles = { git = "https://github.com/Peariforme/bigsmiles-rs" }
 thiserror = "2"
 criterion = { version = "0.5", features = ["html_reports"] }

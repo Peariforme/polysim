@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Pre-push hook: reject pushes when the test suite fails.
+set -euo pipefail
+
+echo "▶ cargo test --all-features"
+if ! cargo test --all-features 2>&1; then
+    echo ""
+    echo "✗ Test suite failed."
+    echo "  Fix the failing tests before pushing."
+    exit 1
+fi
+
+echo "✓ Pre-push checks passed."
