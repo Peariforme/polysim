@@ -58,9 +58,10 @@ jobs:
             ${{ runner.os }}-cargo-bench-
 
       - name: Run benchmarks
-        run: >
-          cargo bench -p polysim-core
-          -- --output-format bencher 2>&1 | tee benchmark_polysim.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo bench -p polysim-core -- --output-format bencher 2>&1 | tee benchmark_polysim.txt
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
