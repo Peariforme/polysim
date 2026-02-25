@@ -1,0 +1,17 @@
+[workspace]
+members = [
+    "crates/polysim-core",
+    "crates/polysim-cli",
+]
+resolver = "2"
+
+[workspace.package]
+version      = "0.1.0"
+edition      = "2021"
+license      = "MIT"
+authors      = ["Peariforme"]
+repository   = "https://github.com/Peariforme/polysim"
+
+[workspace.dependencies]
+bigsmiles-core = { git = "https://github.com/Peariforme/bigsmiles-rs" }
+thiserror      = "2"
