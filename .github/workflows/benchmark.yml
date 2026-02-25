@@ -59,7 +59,7 @@ jobs:
 
       - name: Run benchmarks
         run: >
-          cargo bench -p polysim-core --bench homopolymer
+          cargo bench -p polysim-core
           -- --output-format bencher 2>&1 | tee benchmark_polysim.txt
 
       - name: Store benchmark result
