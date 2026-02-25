@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>polysim — Benchmark Comparisons</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="./nav.js"></script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg-card: #f8fafc;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --orange: #f59e0b;
+            --purple: #8b5cf6;
+            --red: #ef4444;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --bg-card: #1e293b;
+                --text: #e2e8f0;
+                --text-muted: #94a3b8;
+                --border: #334155;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        header p { color: var(--text-muted); }
+        header a { color: var(--blue); text-decoration: none; }
+        header a:hover { text-decoration: underline; }
+
+        .nav {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            color: var(--blue);
+            text-decoration: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+        .nav a:hover { border-color: var(--blue); }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        section .description {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        code {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.1rem 0.35rem;
+            border-radius: 0.25rem;
+            font-size: 0.85em;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .chart-row { grid-template-columns: 1fr; }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        td:first-child, th:first-child { text-align: left; }
+        tr:last-child td { border-bottom: none; }
+
+        .speedup-positive { color: var(--green); font-weight: 600; }
+        .speedup-negative { color: var(--red); font-weight: 600; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-fast { background: #d1fae5; color: #065f46; }
+        .badge-slow { background: #fee2e2; color: #991b1b; }
+
+        @media (prefers-color-scheme: dark) {
+            .badge-fast { background: #064e3b; color: #6ee7b7; }
+            .badge-slow { background: #7f1d1d; color: #fca5a5; }
+        }
+
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        #error {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--red);
+            background: var(--bg-card);
+            border: 1px solid var(--red);
+            border-radius: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Benchmark Comparisons</h1>
+        <p>Comparative analysis of polymer chain generation performance</p>
+        <div class="nav">
+            <a href="#section-scaling">Chain Length Scaling</a>
+            <a href="#section-ring-overhead">Ring Renumbering Overhead</a>
+        </div>
+    </header>
+
+    <div id="loading">Loading benchmark data&hellip;</div>
+    <div id="error">
+        <p><strong>Could not load benchmark data.</strong></p>
+        <p>Make sure benchmarks have been run at least once on the master branch.</p>
+    </div>
+
+    <div id="content" style="display:none;">
+
+        <!-- ========== Chain Length Scaling ========== -->
+        <section id="section-scaling">
+            <h2>Chain Length Scaling</h2>
+            <p class="description">
+                Build time for polyethylene (<code>{[]CC[]}</code>, no ring closures) and
+                polystyrene (<code>{[]CC(c1ccccc1)[]}</code>, ring renumbering required) at
+                increasing repeat counts. Confirms O(n) scaling and helps detect
+                algorithmic regressions.
+            </p>
+            <div class="chart-row">
+                <div class="chart-container">
+                    <canvas id="scalingTimeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="scalingPerUnitChart"></canvas>
+                </div>
+            </div>
+            <table id="scalingTable"></table>
+        </section>
+
+        <!-- ========== Ring Renumbering Overhead ========== -->
+        <section id="section-ring-overhead">
+            <h2>Ring Renumbering Overhead</h2>
+            <p class="description">
+                Overhead introduced by ring closure renumbering when building polystyrene
+                chains vs. the ring-free polyethylene baseline. At each repeat count where
+                both benchmarks exist, the overhead shows the cost of scanning and
+                rewriting ring indices in the SMILES string.
+            </p>
+            <div class="chart-row">
+                <div class="chart-container">
+                    <canvas id="ringTimeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="ringOverheadChart"></canvas>
+                </div>
+            </div>
+            <table id="ringTable"></table>
+        </section>
+
+        <p class="last-updated" id="lastUpdated"></p>
+    </div>
+
+    <!-- data.js is generated by benchmark-action on gh-pages -->
+    <script src="./data.js"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        // ── Helpers ──────────────────────────────────────────────
+
+        function formatNs(ns) {
+            if (ns < 1000) return ns.toFixed(0) + ' ns';
+            if (ns < 1e6)  return (ns / 1e3).toFixed(1) + ' \u00b5s';
+            if (ns < 1e9)  return (ns / 1e6).toFixed(2) + ' ms';
+            return (ns / 1e9).toFixed(2) + ' s';
+        }
+
+        function getLatestBenches() {
+            if (!window.BENCHMARK_DATA) return null;
+            var entries = Object.values(window.BENCHMARK_DATA.entries);
+            if (!entries.length || !entries[0].length) return null;
+            return entries[0][entries[0].length - 1];
+        }
+
+        function groupBenches(benches) {
+            var groups = {
+                scaling: { polyethylene: {}, polystyrene: {} }
+            };
+
+            benches.forEach(function (bench) {
+                var m;
+                if ((m = bench.name.match(/^homopolymer\/polyethylene\/(\d+)$/))) {
+                    groups.scaling.polyethylene[+m[1]] = bench.value;
+                } else if ((m = bench.name.match(/^homopolymer\/polystyrene\/(\d+)$/))) {
+                    groups.scaling.polystyrene[+m[1]] = bench.value;
+                }
+            });
+
+            return groups;
+        }
+
+        // ── Chart theme ──────────────────────────────────────────
+
+        var COLORS = {
+            blue:      '#3b82f6',  blueBg:   'rgba(59,130,246,0.7)',
+            green:     '#10b981',  greenBg:  'rgba(16,185,129,0.7)',
+            orange:    '#f59e0b',  orangeBg: 'rgba(245,158,11,0.7)',
+            purple:    '#8b5cf6',  purpleBg: 'rgba(139,92,246,0.7)',
+            slate:     '#64748b',  slateBg:  'rgba(100,116,139,0.7)'
+        };
+
+        function cssVar(name) {
+            return getComputedStyle(document.documentElement)
+                .getPropertyValue(name).trim();
+        }
+        function textColor()  { return cssVar('--text')       || '#1e293b'; }
+        function mutedColor() { return cssVar('--text-muted') || '#64748b'; }
+
+        // ── Generic bar chart factory ────────────────────────────
+
+        function barChart(canvasId, cfg) {
+            var tc = textColor(), mc = mutedColor();
+
+            var xTicks = { color: mc };
+            if (cfg.horizontal) {
+                xTicks.callback = cfg.xTick || function (v) { return formatNs(v); };
+            }
+
+            var yTicks = { color: mc };
+            if (!cfg.horizontal) {
+                yTicks.callback = cfg.yTick || function (v) { return formatNs(v); };
+            }
+
+            var xScale = { ticks: xTicks, grid: { color: 'rgba(148,163,184,0.1)' } };
+            if (cfg.xTitle) xScale.title = { display: true, text: cfg.xTitle, color: mc };
+            if (cfg.horizontal && cfg.logScale) xScale.type = 'logarithmic';
+
+            var yScale = { ticks: yTicks, grid: { color: 'rgba(148,163,184,0.1)' } };
+            if (cfg.yTitle) yScale.title = { display: true, text: cfg.yTitle, color: mc };
+            if (!cfg.horizontal && cfg.logScale) yScale.type = 'logarithmic';
+
+            return new Chart(document.getElementById(canvasId), {
+                type: 'bar',
+                data: cfg.data,
+                options: {
+                    indexAxis: cfg.horizontal ? 'y' : 'x',
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: !!cfg.title,
+                            text: cfg.title || '',
+                            color: tc,
+                            font: { size: 14, weight: '600' }
+                        },
+                        legend: {
+                            display: cfg.showLegend !== false,
+                            labels: { color: tc }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: cfg.tooltipLabel || function (ctx) {
+                                    return ctx.dataset.label + ': ' + formatNs(ctx.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: { x: xScale, y: yScale }
+                }
+            });
+        }
+
+        // ── Section builders ─────────────────────────────────────
+
+        function buildScaling(g) {
+            var peSizes = Object.keys(g.scaling.polyethylene)
+                .map(Number).sort(function (a, b) { return a - b; });
+            var psSizes = Object.keys(g.scaling.polystyrene)
+                .map(Number).sort(function (a, b) { return a - b; });
+
+            if (!peSizes.length && !psSizes.length) {
+                document.getElementById('section-scaling').style.display = 'none';
+                return;
+            }
+
+            var allSizes = peSizes.concat(psSizes)
+                .filter(function (v, i, a) { return a.indexOf(v) === i; })
+                .sort(function (a, b) { return a - b; });
+
+            barChart('scalingTimeChart', {
+                title: 'Build Time by Chain Length',
+                xTitle: 'Repeat Units',
+                yTitle: 'Time (log scale)',
+                logScale: true,
+                data: {
+                    labels: allSizes.map(function (s) { return s.toLocaleString(); }),
+                    datasets: [
+                        { label: 'Polyethylene (no rings)',
+                          data: allSizes.map(function (s) { return g.scaling.polyethylene[s] || null; }),
+                          backgroundColor: COLORS.blueBg, borderColor: COLORS.blue, borderWidth: 1 },
+                        { label: 'Polystyrene (ring renumbering)',
+                          data: allSizes.map(function (s) { return g.scaling.polystyrene[s] || null; }),
+                          backgroundColor: COLORS.orangeBg, borderColor: COLORS.orange, borderWidth: 1 }
+                    ]
+                }
+            });
+
+            barChart('scalingPerUnitChart', {
+                title: 'Time per Repeat Unit',
+                xTitle: 'Repeat Units',
+                yTitle: 'ns / repeat unit',
+                logScale: false,
+                yTick: function (v) { return v.toFixed(0) + ' ns'; },
+                tooltipLabel: function (ctx) {
+                    return ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + ' ns/unit';
+                },
+                data: {
+                    labels: allSizes.map(function (s) { return s.toLocaleString(); }),
+                    datasets: [
+                        { label: 'Polyethylene',
+                          data: allSizes.map(function (s) {
+                              var v = g.scaling.polyethylene[s]; return v != null ? v / s : null;
+                          }),
+                          backgroundColor: COLORS.blueBg, borderColor: COLORS.blue, borderWidth: 1 },
+                        { label: 'Polystyrene',
+                          data: allSizes.map(function (s) {
+                              var v = g.scaling.polystyrene[s]; return v != null ? v / s : null;
+                          }),
+                          backgroundColor: COLORS.orangeBg, borderColor: COLORS.orange, borderWidth: 1 }
+                    ]
+                }
+            });
+
+            var html = '<thead><tr>' +
+                '<th>Polymer</th><th>Repeat Units</th>' +
+                '<th>Build Time</th><th>ns / unit</th>' +
+                '</tr></thead><tbody>';
+
+            peSizes.forEach(function (s) {
+                var v = g.scaling.polyethylene[s];
+                html += '<tr><td>Polyethylene</td><td>' + s.toLocaleString() +
+                    '</td><td>' + formatNs(v) + '</td><td>' +
+                    (v / s).toFixed(1) + ' ns</td></tr>';
+            });
+            psSizes.forEach(function (s) {
+                var v = g.scaling.polystyrene[s];
+                html += '<tr><td>Polystyrene</td><td>' + s.toLocaleString() +
+                    '</td><td>' + formatNs(v) + '</td><td>' +
+                    (v / s).toFixed(1) + ' ns</td></tr>';
+            });
+
+            html += '</tbody>';
+            document.getElementById('scalingTable').innerHTML = html;
+        }
+
+        function buildRingOverhead(g) {
+            var commonSizes = Object.keys(g.scaling.polyethylene)
+                .map(Number)
+                .filter(function (s) { return g.scaling.polystyrene[s] != null; })
+                .sort(function (a, b) { return a - b; });
+
+            if (!commonSizes.length) {
+                document.getElementById('section-ring-overhead').style.display = 'none';
+                return;
+            }
+
+            var peV  = commonSizes.map(function (s) { return g.scaling.polyethylene[s]; });
+            var psV  = commonSizes.map(function (s) { return g.scaling.polystyrene[s]; });
+            var overheads = commonSizes.map(function (_, i) {
+                return peV[i] ? ((psV[i] - peV[i]) / peV[i]) * 100 : 0;
+            });
+
+            barChart('ringTimeChart', {
+                title: 'Build Time: Polyethylene vs Polystyrene',
+                xTitle: 'Repeat Units',
+                yTitle: 'Time (log scale)',
+                logScale: true,
+                data: {
+                    labels: commonSizes.map(function (s) { return s.toLocaleString(); }),
+                    datasets: [
+                        { label: 'Polyethylene (baseline)',
+                          data: peV,
+                          backgroundColor: COLORS.blueBg, borderColor: COLORS.blue, borderWidth: 1 },
+                        { label: 'Polystyrene (with ring renumbering)',
+                          data: psV,
+                          backgroundColor: COLORS.orangeBg, borderColor: COLORS.orange, borderWidth: 1 }
+                    ]
+                }
+            });
+
+            barChart('ringOverheadChart', {
+                title: 'Ring Renumbering Overhead (%)',
+                xTitle: 'Repeat Units',
+                yTitle: 'Overhead vs polyethylene',
+                logScale: false,
+                yTick: function (v) { return v.toFixed(0) + '%'; },
+                tooltipLabel: function (ctx) { return ctx.raw.toFixed(1) + '%'; },
+                data: {
+                    labels: commonSizes.map(function (s) { return s.toLocaleString(); }),
+                    datasets: [{
+                        label: 'Overhead %',
+                        data: overheads,
+                        backgroundColor: overheads.map(function (o) {
+                            return o < 20 ? COLORS.greenBg : o < 50 ? COLORS.orangeBg : 'rgba(239,68,68,0.7)';
+                        }),
+                        borderColor: overheads.map(function (o) {
+                            return o < 20 ? COLORS.green : o < 50 ? COLORS.orange : '#ef4444';
+                        }),
+                        borderWidth: 1
+                    }]
+                }
+            });
+
+            var html = '<thead><tr>' +
+                '<th>Repeat Units</th>' +
+                '<th>Polyethylene</th><th>Polystyrene</th>' +
+                '<th>Overhead</th></tr></thead><tbody>';
+
+            commonSizes.forEach(function (s, i) {
+                var diff = psV[i] - peV[i];
+                var pct  = overheads[i];
+                var cls  = pct < 20 ? 'speedup-positive' : 'speedup-negative';
+                html += '<tr><td>' + s.toLocaleString() + '</td>' +
+                    '<td>' + formatNs(peV[i]) + '</td>' +
+                    '<td>' + formatNs(psV[i]) + '</td>' +
+                    '<td class="' + cls + '">+' + formatNs(diff) + ' (' + pct.toFixed(1) + '%)</td></tr>';
+            });
+
+            html += '</tbody>';
+            document.getElementById('ringTable').innerHTML = html;
+        }
+
+        // ── Main ─────────────────────────────────────────────────
+
+        function main() {
+            var latest = getLatestBenches();
+
+            if (!latest || !latest.benches || !latest.benches.length) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display   = 'block';
+                return;
+            }
+
+            var groups = groupBenches(latest.benches);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+            buildScaling(groups);
+            buildRingOverhead(groups);
+
+            // Footer
+            var date = new Date(latest.date * 1000);
+            var sha  = (latest.commit && latest.commit.id)
+                ? latest.commit.id.substring(0, 7) : '?';
+            document.getElementById('lastUpdated').textContent =
+                'Last updated: ' + date.toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                }) + ' (commit ' + sha + ')';
+        }
+
+        if (window.BENCHMARK_DATA) {
+            main();
+        } else {
+            window.addEventListener('load', function () {
+                if (window.BENCHMARK_DATA) { main(); }
+                else {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').style.display   = 'block';
+                }
+            });
+        }
+    })();
+    </script>
+</body>
+</html>
