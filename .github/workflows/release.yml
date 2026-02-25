@@ -1,53 +1,44 @@
-name: release-plz
+name: Release-plz
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+    # Only trigger when crate code or manifests change.
+    # Pure CI / doc changes do not produce a release.
+    paths:
+      - 'crates/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+
+# Prevent concurrent runs that could create version conflicts.
+concurrency:
+  group: release-plz-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  # ── Crée automatiquement une PR de release avec changelog + bump de version ─
-  release-plz-pr:
-    name: release-plz (PR)
+  release-plz:
+    name: Release-plz
     runs-on: ubuntu-latest
-    concurrency:
-      group: release-plz-${{ github.ref }}
-      cancel-in-progress: false
+    # Required to open PRs and push tags.
     permissions:
       contents: write
       pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: Run release-plz
-        uses: release-plz/action@v0.5
-        with:
-          command: release-pr
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-  # ── Publie sur crates.io quand la PR de release est mergée ──────────────────
-  release-plz-release:
-    name: release-plz (publish)
-    runs-on: ubuntu-latest
-    concurrency:
-      group: release-plz-release-${{ github.ref }}
-      cancel-in-progress: false
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
+          # release-plz needs full history to compute changelogs.
           fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Run release-plz
+        # release-plz automatically detects which crates have new commits
+        # since their last release and only bumps those.
         uses: release-plz/action@v0.5
-        with:
-          command: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

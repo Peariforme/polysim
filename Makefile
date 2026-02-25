@@ -4,8 +4,8 @@
 ## Run this once after cloning: make install-hooks
 install-hooks:
 	git config core.hooksPath .githooks
-	chmod +x .githooks/pre-commit .githooks/pre-push
-	@echo "Git hooks installed (pre-commit: fmt+clippy, pre-push: test)."
+	chmod +x .githooks/pre-commit .githooks/pre-push .githooks/commit-msg
+	@echo "Git hooks installed (commit-msg: conventional commits, pre-commit: fmt+clippy, pre-push: test)."
 
 ## Run the full test suite.
 test:

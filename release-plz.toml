@@ -1,0 +1,11 @@
+[workspace]
+# GitHub releases are disabled at workspace level; enabled per publishable package below.
+git_release_enable = false
+
+[[package]]
+name = "polysim-core"
+# Enable GitHub release creation and CHANGELOG updates for this crate.
+git_release_enable = true
+changelog_update = true
+
+# polysim-cli has publish = false and is intentionally omitted here.

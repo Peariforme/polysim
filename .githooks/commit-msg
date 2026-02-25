@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#
+# commit-msg hook — enforces Conventional Commits format
+# Install: git config core.hooksPath .githooks
+#
+# Format: <type>[optional scope][optional !]: <description>
+#
+# Types:
+#   feat     New feature              → minor bump (0.x.0)
+#   fix      Bug fix                  → patch bump (0.0.x)
+#   docs     Documentation only
+#   style    Formatting, no logic change
+#   refactor Code change, no feature/fix
+#   perf     Performance improvement
+#   test     Adding or fixing tests
+#   chore    Build process, tooling
+#   ci       CI configuration
+#   build    Build system changes
+#   revert   Revert a previous commit
+#
+# Breaking change → major bump (x.0.0):
+#   feat!: rename parse() to from_str()
+#   feat(api)!: remove deprecated functions
+#   Or add "BREAKING CHANGE:" in the body
+#
+# Examples:
+#   feat: add block copolymer generation
+#   fix: correct ring closure renumbering for bicyclic units
+#   feat(builder)!: change LinearBuilder::new signature
+#   docs: update README with benchmark results
+
+commit_msg=$(cat "$1")
+
+# Allow merge commits
+if echo "$commit_msg" | grep -qE "^Merge "; then
+  exit 0
+fi
+
+# Allow revert commits
+if echo "$commit_msg" | grep -qE "^Revert "; then
+  exit 0
+fi
+
+# Conventional Commits pattern
+pattern="^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\([^)]+\))?!?: .{1,}"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo ""
+  echo "  ✗ Commit message does not follow Conventional Commits format."
+  echo ""
+  echo "  Expected:  <type>[(<scope>)][!]: <description>"
+  echo "  Examples:"
+  echo "    feat: add block copolymer generation"
+  echo "    fix: correct ring closure renumbering for bicyclic units"
+  echo "    feat(builder)!: change LinearBuilder::new signature  ← breaking change"
+  echo ""
+  echo "  Types: feat fix docs style refactor perf test chore ci build revert"
+  echo ""
+  echo "  Your message: \"$commit_msg\""
+  echo ""
+  exit 1
+fi
+
+# Warn if description is too short (less than 10 chars after the colon)
+description=$(echo "$commit_msg" | sed 's/^[^:]*: //')
+if [ ${#description} -lt 10 ]; then
+  echo ""
+  echo "  ⚠ Commit description is very short. Be more descriptive."
+  echo "  Your description: \"$description\""
+  echo ""
+fi
+
+exit 0
