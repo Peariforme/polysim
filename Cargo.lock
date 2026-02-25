@@ -307,14 +307,14 @@ dependencies = [
 
 [[package]]
 name = "polysim-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "polysim-core",
 ]
 
 [[package]]
 name = "polysim-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bigsmiles",
  "criterion",
