@@ -21,6 +21,9 @@ thiserror  = { workspace = true }
 bigsmiles = { workspace = true }
 criterion = { workspace = true }
 
+[lib]
+bench = false
+
 [[bench]]
 name    = "homopolymer"
 harness = false
