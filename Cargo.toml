@@ -15,3 +15,4 @@ repository   = "https://github.com/Peariforme/polysim"
 [workspace.dependencies]
 bigsmiles = { git = "https://github.com/Peariforme/bigsmiles-rs" }
 thiserror = "2"
+criterion = { version = "0.5", features = ["html_reports"] }

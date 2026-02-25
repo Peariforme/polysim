@@ -8,4 +8,12 @@ repository.workspace = true
 
 [dependencies]
 bigsmiles = { workspace = true }
-thiserror      = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+bigsmiles  = { workspace = true }
+criterion  = { workspace = true }
+
+[[bench]]
+name    = "homopolymer"
+harness = false

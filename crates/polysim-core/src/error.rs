@@ -20,4 +20,10 @@ pub enum PolySimError {
 
     #[error("Weight fractions must sum to 1.0 (got {sum:.4})")]
     InvalidFractions { sum: f64 },
+
+    #[error(
+        "ring number overflow: l'unité de répétition utilise {max_ring} ring(s), \
+         maximum supporté par SMILES = {max_supported}"
+    )]
+    RingNumberOverflow { max_ring: u32, max_supported: u32 },
 }
