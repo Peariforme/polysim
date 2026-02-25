@@ -13,5 +13,5 @@ authors      = ["Peariforme"]
 repository   = "https://github.com/Peariforme/polysim"
 
 [workspace.dependencies]
-bigsmiles-core = { git = "https://github.com/Peariforme/bigsmiles-rs" }
-thiserror      = "2"
+bigsmiles = { git = "https://github.com/Peariforme/bigsmiles-rs" }
+thiserror = "2"

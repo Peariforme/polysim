@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum PolySimError {
     #[error("BigSMILES parse error: {0}")]
-    Parse(#[from] bigsmiles_core::ParseError),
+    Parse(#[from] bigsmiles::ParseError),
 
     #[error("Invalid build strategy: {0}")]
     BuildStrategy(String),

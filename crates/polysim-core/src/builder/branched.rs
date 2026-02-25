@@ -1,6 +1,6 @@
 use crate::{error::PolySimError, polymer::PolymerChain};
 use super::strategy::BuildStrategy;
-use bigsmiles_core::BigSmiles;
+use bigsmiles::BigSmiles;
 
 /// Builder for non-linear polymer architectures (branched, graft, macromonomer).
 pub struct BranchedBuilder {

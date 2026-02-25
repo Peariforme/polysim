@@ -1,6 +1,6 @@
 use crate::{error::PolySimError, polymer::PolymerChain};
 use super::strategy::BuildStrategy;
-use bigsmiles_core::BigSmiles;
+use bigsmiles::BigSmiles;
 
 /// Builder for linear polymer architectures derived from a single BigSMILES.
 pub struct LinearBuilder {
