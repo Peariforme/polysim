@@ -1,0 +1,95 @@
+name: Benchmark
+
+permissions:
+  contents: write
+  pull-requests: write
+  deployments: write
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ── Change detection ───────────────────────────────────────────────────────
+  changes:
+    name: Detect changed crates
+    runs-on: ubuntu-latest
+    outputs:
+      polysim-core: ${{ steps.filter.outputs.polysim-core }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            polysim-core:
+              - 'crates/polysim-core/**'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+
+  # ── Benchmark polysim-core ─────────────────────────────────────────────────
+  bench-polysim-core:
+    name: Benchmark polysim-core
+    needs: changes
+    if: needs.changes.outputs.polysim-core == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-bench-push
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-bench-polysim-core-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-bench-polysim-core-
+            ${{ runner.os }}-cargo-bench-
+
+      - name: Run benchmarks
+        run: >
+          cargo bench -p polysim-core --bench homopolymer
+          -- --output-format bencher 2>&1 | tee benchmark_polysim.txt
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Polymer Builder Benchmarks
+          tool: cargo
+          output-file-path: benchmark_polysim.txt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          comment-on-alert: true
+          alert-threshold: '150%'
+          fail-on-alert: false
+          comment-always: ${{ github.event_name == 'pull_request' }}
+          save-data-file: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          alert-comment-cc-users: '@Peariforme'
+
+      - name: Deploy custom pages to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages:gh-pages
+          git worktree add /tmp/gh-pages gh-pages
+          mkdir -p /tmp/gh-pages/dev/bench
+          cp bench-pages/compare.html /tmp/gh-pages/dev/bench/compare.html
+          cp bench-pages/nav.js /tmp/gh-pages/dev/bench/nav.js
+          if [ -f /tmp/gh-pages/dev/bench/index.html ] && ! grep -q 'nav\.js' /tmp/gh-pages/dev/bench/index.html; then
+            sed -i 's|</body>|<script src="./nav.js"></script></body>|' /tmp/gh-pages/dev/bench/index.html
+          fi
+          cd /tmp/gh-pages
+          git add dev/bench/compare.html dev/bench/nav.js dev/bench/index.html
+          git diff --cached --quiet || (git commit -m "Update benchmark pages (comparison + navigation)" && git push origin gh-pages)
