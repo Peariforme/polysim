@@ -8,7 +8,7 @@ Un simulateur de polymères en Rust qui :
 
 ### Dépendance principale
 - `bigsmiles-rs` : https://github.com/Peariforme/bigsmiles-rs
-  - Crates utilisées : `bigsmiles-core` (parser BigSMILES) et `smiles-core` (parser SMILES)
+  - Crates utilisées : `bigsmiles` (parser BigSMILES) et `opensmiles` (parser SMILES)
 
 ---
 
