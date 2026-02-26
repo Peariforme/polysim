@@ -19,3 +19,7 @@ polysim-core = { path = "../polysim-core" }
 clap         = { version = "4", features = ["derive"] }
 colored      = "2"
 comfy-table  = "7"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
