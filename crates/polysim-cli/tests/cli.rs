@@ -247,10 +247,7 @@ fn analyze_invalid_bigsmiles_reports_error_to_stderr() {
 #[test]
 fn analyze_no_strategy_flag_exits_failure() {
     // Aucune stratégie fournie → erreur clap (groupe requis)
-    polysim()
-        .args(["analyze", "{[]CC[]}"])
-        .assert()
-        .failure();
+    polysim().args(["analyze", "{[]CC[]}"]).assert().failure();
 }
 
 #[test]
@@ -293,12 +290,7 @@ fn analyze_no_stochastic_object_exits_failure() {
 fn analyze_copolymer_bigsmiles_exits_failure() {
     // Copolymère → homopolymer() retourne une erreur (deux unités répétées)
     polysim()
-        .args([
-            "analyze",
-            "{[$]CC[$],[$]CC(C)[$]}",
-            "--by-repeat",
-            "5",
-        ])
+        .args(["analyze", "{[$]CC[$],[$]CC(C)[$]}", "--by-repeat", "5"])
         .assert()
         .failure()
         .stderr(contains("error:"));
