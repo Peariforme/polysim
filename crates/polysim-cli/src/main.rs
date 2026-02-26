@@ -1,3 +1,4 @@
+use bigsmiles::{BigSmiles, BigSmilesSegment};
 use clap::{Args, Parser, Subcommand};
 use colored::Colorize;
 use comfy_table::{Attribute, Cell, Color as TableColor, ContentArrangement, Table};
@@ -98,18 +99,26 @@ fn run_analyze(bigsmiles_str: &str, args: &StrategyArgs) -> Result<(), i32> {
     })?;
 
     // --- Build chain ------------------------------------------------------
-    let chain = LinearBuilder::new(bigsmiles, strategy)
+    let chain = LinearBuilder::new(bigsmiles.clone(), strategy)
         .homopolymer()
         .map_err(|e| {
             eprintln!("{} {e}", "error:".red().bold());
             1
         })?;
 
+    // --- Extract beginning / ending blocks --------------------------------
+    let begin_block = smiles_before_stochastic(&bigsmiles);
+    let end_block = smiles_after_stochastic(&bigsmiles);
+
     // --- Compute properties -----------------------------------------------
     let mono_mass = monoisotopic_mass(&chain);
     let formula_raw = molecular_formula(&chain);
     let n_atoms = total_atom_count(&chain);
     let formula_display = subscript_digits(&formula_raw);
+
+    // --- Deltas (target vs achieved) --------------------------------------
+    let delta_mn: Option<f64> = args.by_mn.map(|target| chain.mn - target);
+    let delta_mass: Option<f64> = args.by_mass.map(|target| mono_mass - target);
 
     // --- Banner -----------------------------------------------------------
     println!();
@@ -127,6 +136,12 @@ fn run_analyze(bigsmiles_str: &str, args: &StrategyArgs) -> Result<(), i32> {
         bigsmiles_str.yellow()
     );
     println!("  {:<11}{}", "Strategy".bold(), strategy_label);
+    if let Some(ref bb) = begin_block {
+        println!("  {:<11}{}", "Begin".bold(), bb.yellow());
+    }
+    if let Some(ref eb) = end_block {
+        println!("  {:<11}{}", "End".bold(), eb.yellow());
+    }
     println!(
         "  {:<11}{}",
         "SMILES".bold(),
@@ -152,6 +167,13 @@ fn run_analyze(bigsmiles_str: &str, args: &StrategyArgs) -> Result<(), i32> {
         Cell::new("Mn  (number-average Mw)"),
         Cell::new(format!("{:.3} g/mol", chain.mn)).fg(TableColor::Green),
     ]);
+    if let Some(d) = delta_mn {
+        let (sign, color) = delta_style(d, chain.mn);
+        table.add_row(vec![
+            Cell::new("  Δ Mn  (achieved − target)").fg(TableColor::DarkGrey),
+            Cell::new(format!("{}{:.3} g/mol", sign, d)).fg(color),
+        ]);
+    }
     table.add_row(vec![
         Cell::new("Mw ¹"),
         Cell::new(format!("{:.3} g/mol", chain.mn)).fg(TableColor::Green),
@@ -164,6 +186,13 @@ fn run_analyze(bigsmiles_str: &str, args: &StrategyArgs) -> Result<(), i32> {
         Cell::new("Monoisotopic mass"),
         Cell::new(format!("{mono_mass:.3} g/mol")).fg(TableColor::Yellow),
     ]);
+    if let Some(d) = delta_mass {
+        let (sign, color) = delta_style(d, mono_mass);
+        table.add_row(vec![
+            Cell::new("  Δ mono  (achieved − target)").fg(TableColor::DarkGrey),
+            Cell::new(format!("{}{:.3} g/mol", sign, d)).fg(color),
+        ]);
+    }
     table.add_row(vec![
         Cell::new("Molecular formula"),
         Cell::new(&formula_display).fg(TableColor::Magenta),
@@ -191,6 +220,64 @@ fn run_analyze(bigsmiles_str: &str, args: &StrategyArgs) -> Result<(), i32> {
     println!();
 
     Ok(())
+}
+
+/// Retourne le signe et la couleur pour afficher un delta.
+///
+/// Vert si |Δ/valeur| < 0.5 %, jaune sinon.
+fn delta_style(delta: f64, reference: f64) -> (&'static str, TableColor) {
+    let sign = if delta >= 0.0 { "+" } else { "" };
+    let relative = if reference.abs() > 1e-9 {
+        (delta / reference).abs()
+    } else {
+        delta.abs()
+    };
+    let color = if relative < 0.005 {
+        TableColor::Green
+    } else {
+        TableColor::Yellow
+    };
+    (sign, color)
+}
+
+/// Retourne la concaténation des fragments SMILES situés avant le premier
+/// objet stochastique dans le BigSMILES (bloc de début / initiateur).
+fn smiles_before_stochastic(bs: &BigSmiles) -> Option<String> {
+    let first_stoch = bs
+        .segments
+        .iter()
+        .position(|s| matches!(s, BigSmilesSegment::Stochastic(_)))?;
+    let s: String = bs.segments[..first_stoch]
+        .iter()
+        .filter_map(|seg| {
+            if let BigSmilesSegment::Smiles(mol) = seg {
+                Some(format!("{mol}"))
+            } else {
+                None
+            }
+        })
+        .collect();
+    if s.is_empty() { None } else { Some(s) }
+}
+
+/// Retourne la concaténation des fragments SMILES situés après le dernier
+/// objet stochastique dans le BigSMILES (bloc de fin / terminateur).
+fn smiles_after_stochastic(bs: &BigSmiles) -> Option<String> {
+    let last_stoch = bs
+        .segments
+        .iter()
+        .rposition(|s| matches!(s, BigSmilesSegment::Stochastic(_)))?;
+    let s: String = bs.segments[last_stoch + 1..]
+        .iter()
+        .filter_map(|seg| {
+            if let BigSmilesSegment::Smiles(mol) = seg {
+                Some(format!("{mol}"))
+            } else {
+                None
+            }
+        })
+        .collect();
+    if s.is_empty() { None } else { Some(s) }
 }
 
 /// Remplace les chiffres ASCII par leurs équivalents Unicode en exposant inférieur.
