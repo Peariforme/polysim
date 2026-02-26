@@ -16,3 +16,6 @@ path = "src/main.rs"
 
 [dependencies]
 polysim-core = { path = "../polysim-core" }
+clap         = { version = "4", features = ["derive"] }
+colored      = "2"
+comfy-table  = "7"
