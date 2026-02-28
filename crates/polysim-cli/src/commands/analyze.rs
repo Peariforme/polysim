@@ -1,3 +1,4 @@
+use bigsmiles::BigSmilesSegment;
 use colored::Colorize;
 use polysim_core::{
     builder::{linear::LinearBuilder, BuildStrategy},
@@ -9,7 +10,6 @@ use polysim_core::{
 };
 
 use crate::display;
-use crate::utils::bigsmiles_ext;
 use crate::StrategyArgs;
 
 /// All data needed to render one analysis report.
@@ -52,8 +52,8 @@ pub fn run(bigsmiles_str: &str, args: &StrategyArgs) -> Result<(), i32> {
     let result = AnalysisResult {
         bigsmiles_str: bigsmiles_str.to_owned(),
         strategy_label,
-        begin_block: bigsmiles_ext::before_stochastic(&bigsmiles),
-        end_block: bigsmiles_ext::after_stochastic(&bigsmiles),
+        begin_block: segments_to_smiles(bigsmiles.prefix_segments()),
+        end_block: segments_to_smiles(bigsmiles.suffix_segments()),
         smiles: chain.smiles.clone(),
         repeat_count: chain.repeat_count,
         mn: chain.mn,
@@ -69,6 +69,17 @@ pub fn run(bigsmiles_str: &str, args: &StrategyArgs) -> Result<(), i32> {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+fn segments_to_smiles(segs: &[BigSmilesSegment]) -> Option<String> {
+    let s: String = segs
+        .iter()
+        .filter_map(|seg| match seg {
+            BigSmilesSegment::Smiles(mol) => Some(format!("{mol}")),
+            BigSmilesSegment::Stochastic(_) => None,
+        })
+        .collect();
+    (!s.is_empty()).then_some(s)
+}
 
 fn resolve_strategy(args: &StrategyArgs) -> (BuildStrategy, String) {
     if let Some(n) = args.by_repeat {

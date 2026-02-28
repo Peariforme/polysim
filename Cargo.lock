@@ -90,9 +90,9 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bigsmiles"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5c5326d0c6f075092f9a052c9026dac17f0e5e7f9e3e18127581e9af4d37892"
+checksum = "71be72d87780615ed0c28e6e39cfc00e66a618c97919e09f4510cb96f1d71cdb"
 dependencies = [
  "opensmiles",
  "thiserror 1.0.69",
