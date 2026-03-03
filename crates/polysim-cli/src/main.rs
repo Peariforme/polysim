@@ -1,8 +1,10 @@
 mod commands;
 mod display;
+mod report;
 mod utils;
 
 use clap::{Args, Parser, Subcommand};
+use polysim_core::BuildStrategy;
 
 /// Polymer structure generator and property simulator.
 #[derive(Parser)]
@@ -39,18 +41,42 @@ enum Commands {
 /// Build strategy — exactly one of the three flags must be provided.
 #[derive(Args)]
 #[group(required = true, multiple = false)]
-pub struct StrategyArgs {
+pub(crate) struct StrategyArgs {
     /// Build chain with exactly N repeat units.
     #[arg(long, value_name = "N", help_heading = "Build strategy")]
-    pub by_repeat: Option<usize>,
+    pub(crate) by_repeat: Option<usize>,
 
     /// Build chain targeting the given number-average molecular weight (g/mol).
     #[arg(long, value_name = "MN", help_heading = "Build strategy")]
-    pub by_mn: Option<f64>,
+    pub(crate) by_mn: Option<f64>,
 
     /// Build chain targeting the given exact monoisotopic mass (g/mol).
     #[arg(long, value_name = "MASS", help_heading = "Build strategy")]
-    pub by_mass: Option<f64>,
+    pub(crate) by_mass: Option<f64>,
+}
+
+impl StrategyArgs {
+    pub(crate) fn build_strategy(&self) -> BuildStrategy {
+        self.by_repeat
+            .map(BuildStrategy::ByRepeatCount)
+            .or_else(|| self.by_mn.map(BuildStrategy::ByTargetMn))
+            .or_else(|| self.by_mass.map(BuildStrategy::ByExactMass))
+            .expect("clap enforces required group")
+    }
+
+    pub(crate) fn label(&self) -> String {
+        self.by_repeat
+            .map(|n| format!("By repeat count  ·  n = {n}"))
+            .or_else(|| {
+                self.by_mn
+                    .map(|mn| format!("By target Mn  ·  Mn = {mn:.3} g/mol"))
+            })
+            .or_else(|| {
+                self.by_mass
+                    .map(|mass| format!("By exact monoisotopic mass  ·  m = {mass:.3} g/mol"))
+            })
+            .expect("clap enforces required group")
+    }
 }
 
 fn main() {

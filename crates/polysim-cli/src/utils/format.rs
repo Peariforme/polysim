@@ -4,7 +4,7 @@ use comfy_table::Color as TableColor;
 ///
 /// The colour is **green** when |Δ / reference| < 0.5 %, **yellow** otherwise.
 pub fn delta_style(delta: f64, reference: f64) -> (&'static str, TableColor) {
-    let sign = if delta >= 0.0 { "+" } else { "" };
+    let sign = if delta > 0.0 { "+" } else { "" };
     let relative = if reference.abs() > 1e-9 {
         (delta / reference).abs()
     } else {
@@ -41,13 +41,22 @@ pub fn subscript_digits(s: &str) -> String {
 
 /// Truncates a long string with a mid-string ellipsis `…`.
 ///
-/// If `s.len() <= max_len` the original string is returned unchanged.
+/// If `s.chars().count() <= max_len` the original string is returned unchanged.
 pub fn truncate(s: &str, max_len: usize) -> String {
-    if s.len() <= max_len {
+    if s.chars().count() <= max_len {
         s.to_string()
     } else {
         let half = (max_len.saturating_sub(1)) / 2;
-        format!("{}…{}", &s[..half], &s[s.len() - half..])
+        let start: String = s.chars().take(half).collect();
+        let end: String = s
+            .chars()
+            .rev()
+            .take(half)
+            .collect::<String>()
+            .chars()
+            .rev()
+            .collect();
+        format!("{start}…{end}")
     }
 }
 
@@ -145,6 +154,12 @@ mod tests {
     #[test]
     fn delta_style_negative_gets_no_extra_sign() {
         let (sign, _) = delta_style(-5.0, 100.0);
+        assert_eq!(sign, "");
+    }
+
+    #[test]
+    fn delta_style_zero_gets_no_sign() {
+        let (sign, _) = delta_style(0.0, 100.0);
         assert_eq!(sign, "");
     }
 }
