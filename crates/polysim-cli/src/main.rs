@@ -3,7 +3,7 @@ mod display;
 mod report;
 mod utils;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use polysim_core::BuildStrategy;
 
 /// Polymer structure generator and property simulator.
@@ -35,6 +35,31 @@ enum Commands {
 
         #[command(flatten)]
         strategy: StrategyArgs,
+    },
+
+    /// Generate a polydisperse ensemble of polymer chains.
+    ///
+    /// Samples chain lengths from a statistical distribution and reports
+    /// ensemble-averaged properties (Mn, Mw, PDI).
+    Generate {
+        /// BigSMILES string, e.g. "{[]CC[]}" for polyethylene.
+        bigsmiles: String,
+
+        /// Target number-average molecular weight (g/mol).
+        #[arg(long)]
+        mn: f64,
+
+        /// Target polydispersity index (Mw/Mn).
+        #[arg(long, default_value = "2.0")]
+        pdi: f64,
+
+        /// Chain length distribution model.
+        #[arg(long, value_enum, default_value = "schulz-zimm")]
+        distribution: DistributionKind,
+
+        /// Number of chains to generate.
+        #[arg(long, env = "POLYSIM_NUM_CHAINS", default_value = "100")]
+        num_chains: usize,
     },
 }
 
@@ -79,6 +104,23 @@ impl StrategyArgs {
     }
 }
 
+#[derive(Clone, ValueEnum)]
+pub(crate) enum DistributionKind {
+    Flory,
+    LogNormal,
+    SchulzZimm,
+}
+
+impl DistributionKind {
+    pub(crate) fn label(&self) -> &'static str {
+        match self {
+            Self::Flory => "Flory (most probable)",
+            Self::LogNormal => "Log-normal",
+            Self::SchulzZimm => "Schulz-Zimm",
+        }
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
     match cli.command {
@@ -87,6 +129,19 @@ fn main() {
             strategy,
         } => {
             if let Err(code) = commands::analyze::run(&bigsmiles, &strategy) {
+                std::process::exit(code);
+            }
+        }
+        Commands::Generate {
+            bigsmiles,
+            mn,
+            pdi,
+            distribution,
+            num_chains,
+        } => {
+            if let Err(code) =
+                commands::generate::run(&bigsmiles, mn, pdi, &distribution, num_chains)
+            {
                 std::process::exit(code);
             }
         }

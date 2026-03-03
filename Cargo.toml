@@ -14,7 +14,10 @@ repository = "https://github.com/Peariforme/polysim"
 homepage   = "https://github.com/Peariforme/polysim"
 
 [workspace.dependencies]
-bigsmiles  = "0.1"
-opensmiles = "0.1"
+bigsmiles  = { path = "../bigsmiles-rs/crates/bigsmiles" }
+opensmiles = { path = "../bigsmiles-rs/crates/opensmiles" }
 thiserror  = "2"
+rand       = "0.9"
+rand_distr = "0.5"
+clap       = { version = "4", features = ["derive", "env"] }
 criterion  = { version = "0.5", features = ["html_reports"] }

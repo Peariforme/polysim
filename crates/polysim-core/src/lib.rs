@@ -33,11 +33,13 @@
 //! ```
 
 pub mod builder;
+pub mod distribution;
 pub mod error;
 pub mod polymer;
 pub mod properties;
 
 pub use bigsmiles::{parse, BigSmiles};
-pub use builder::BuildStrategy;
+pub use builder::{BuildStrategy, EnsembleBuilder};
+pub use distribution::ChainLengthDistribution;
 pub use error::PolySimError;
-pub use polymer::PolymerChain;
+pub use polymer::{PolymerChain, PolymerEnsemble};
