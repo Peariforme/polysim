@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772534189369,
+  "lastUpdate": 1772544193395,
   "repoUrl": "https://github.com/Peariforme/polysim",
   "entries": {
     "Polymer Builder Benchmarks": [
@@ -263,6 +263,138 @@ window.BENCHMARK_DATA = {
             "name": "molecular_weight/by_target_mn/polyethylene/28255",
             "value": 114665,
             "range": "± 373",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "41898282+github-actions[bot]@users.noreply.github.com",
+            "name": "github-actions[bot]",
+            "username": "github-actions[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "920c9a8eb8c076ad5d804ce38787f3c638c84db6",
+          "message": "chore: release v0.1.1 (#6)\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+          "timestamp": "2026-03-03T14:18:56+01:00",
+          "tree_id": "348ea64d9d97f87dd895fc21c16bb62ad00a1c19",
+          "url": "https://github.com/Peariforme/polysim/commit/920c9a8eb8c076ad5d804ce38787f3c638c84db6"
+        },
+        "date": 1772544192499,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "homopolymer/polyethylene/10",
+            "value": 1621,
+            "range": "± 32",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/100",
+            "value": 11847,
+            "range": "± 51",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/1000",
+            "value": 110129,
+            "range": "± 824",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/10000",
+            "value": 1062501,
+            "range": "± 18637",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/10",
+            "value": 8367,
+            "range": "± 40",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/100",
+            "value": 87996,
+            "range": "± 321",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/1000",
+            "value": 859537,
+            "range": "± 2239",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/10",
+            "value": 1313,
+            "range": "± 4",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/100",
+            "value": 9892,
+            "range": "± 57",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/1000",
+            "value": 91086,
+            "range": "± 343",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polystyrene/10",
+            "value": 7418,
+            "range": "± 25",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polystyrene/100",
+            "value": 73189,
+            "range": "± 325",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/10",
+            "value": 1395,
+            "range": "± 3",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/100",
+            "value": 10464,
+            "range": "± 72",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/1000",
+            "value": 94624,
+            "range": "± 1133",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/282",
+            "value": 2889,
+            "range": "± 15",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/2825",
+            "value": 13702,
+            "range": "± 52",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/28255",
+            "value": 115626,
+            "range": "± 500",
             "unit": "ns/iter"
           }
         ]
