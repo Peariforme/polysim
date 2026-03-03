@@ -10,8 +10,8 @@ changelog_update = true
 
 [[package]]
 name = "polysim-cli"
-# polysim-cli has publish = false in Cargo.toml, so release-plz will skip
-# `cargo publish` but still create git tags and GitHub releases.
+# polysim-cli is distributed as pre-compiled binaries, not on crates.io.
 # The tag format (polysim-cli-v*) triggers dist.yml to build platform binaries.
+publish = false
 git_release_enable = true
 changelog_update = true
