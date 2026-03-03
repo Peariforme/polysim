@@ -1,0 +1,119 @@
+name: Dist
+
+# Triggered when release-plz pushes a version tag (e.g. polysim-cli-v0.2.0).
+# Builds the `polysim` binary for all supported platforms and publishes a
+# GitHub Release with the archives and SHA-256 checksums.
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'polysim-cli-v*'
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ── 1. Cross-platform binary builds ────────────────────────────────────────
+  build:
+    name: Build — ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-22.04
+            binary: polysim
+            archive_ext: tar.gz
+
+          - target: aarch64-apple-darwin
+            runner: macos-latest
+            binary: polysim
+            archive_ext: tar.gz
+
+          - target: x86_64-apple-darwin
+            runner: macos-13
+            binary: polysim
+            archive_ext: tar.gz
+
+          - target: x86_64-pc-windows-msvc
+            runner: windows-2022
+            binary: polysim.exe
+            archive_ext: zip
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }} --bin polysim
+
+      # ── Package Unix (tar.gz) ─────────────────────────────────────────────
+      - name: Package (Unix)
+        if: matrix.archive_ext == 'tar.gz'
+        shell: bash
+        run: |
+          BIN="target/${{ matrix.target }}/release/${{ matrix.binary }}"
+          ARCHIVE="polysim-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+
+          tar czf "${ARCHIVE}" -C "$(dirname "${BIN}")" "${{ matrix.binary }}"
+          sha256sum "${ARCHIVE}" > "${ARCHIVE}.sha256"
+
+          echo "ASSET=${ARCHIVE}" >> "${GITHUB_ENV}"
+          echo "CHECKSUM=${ARCHIVE}.sha256" >> "${GITHUB_ENV}"
+
+      # ── Package Windows (zip) ─────────────────────────────────────────────
+      - name: Package (Windows)
+        if: matrix.archive_ext == 'zip'
+        shell: pwsh
+        run: |
+          $archive = "polysim-${{ github.ref_name }}-${{ matrix.target }}.zip"
+          Compress-Archive `
+            -Path "target/${{ matrix.target }}/release/${{ matrix.binary }}" `
+            -DestinationPath $archive
+
+          $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
+          "$hash  $archive" | Out-File -FilePath "$archive.sha256" -Encoding ascii
+
+          "ASSET=$archive"            | Out-File -FilePath $env:GITHUB_ENV -Append
+          "CHECKSUM=$archive.sha256"  | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.target }}
+          path: |
+            ${{ env.ASSET }}
+            ${{ env.CHECKSUM }}
+
+  # ── 2. GitHub Release ──────────────────────────────────────────────────────
+  release:
+    name: GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lh dist/
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          make_latest: true
