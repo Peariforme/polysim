@@ -1,7 +1,7 @@
 use colored::Colorize;
 use comfy_table::{Attribute, Cell, Color as TableColor, ContentArrangement, Table};
 
-use crate::commands::analyze::AnalysisResult;
+use crate::report::AnalysisResult;
 use crate::utils::format::{delta_style, subscript_digits, truncate};
 
 /// Prints the full analysis report to stdout.
@@ -17,7 +17,7 @@ pub fn print_report(r: &AnalysisResult) {
 fn print_banner() {
     println!();
     let title = "  polysim — Polymer Chain Analysis  ";
-    let bar = "─".repeat(title.len());
+    let bar = "─".repeat(title.chars().count());
     println!("  ╭{bar}╮");
     println!("  │{}│", title.bold().cyan());
     println!("  ╰{bar}╯");
@@ -79,11 +79,11 @@ fn build_table(r: &AnalysisResult) -> Table {
     add_mn_rows(&mut table, r);
 
     table.add_row(vec![
-        Cell::new("Mw ¹"),
+        Cell::new("Mw¹"),
         Cell::new(format!("{:.3} g/mol", r.mn)).fg(TableColor::Green),
     ]);
     table.add_row(vec![
-        Cell::new("Dispersity  Đ ¹"),
+        Cell::new("Dispersity Đ¹"),
         Cell::new("1.000").fg(TableColor::Green),
     ]);
 
@@ -103,13 +103,13 @@ fn build_table(r: &AnalysisResult) -> Table {
 
 fn add_mn_rows(table: &mut Table, r: &AnalysisResult) {
     table.add_row(vec![
-        Cell::new("Mn  (number-average Mw)"),
+        Cell::new("Mn (number-average)"),
         Cell::new(format!("{:.3} g/mol", r.mn)).fg(TableColor::Green),
     ]);
     if let Some(d) = r.delta_mn {
         let (sign, color) = delta_style(d, r.mn);
         table.add_row(vec![
-            Cell::new("  Δ Mn  (achieved − target)").fg(TableColor::DarkGrey),
+            Cell::new("  Δ Mn (achieved − target)").fg(TableColor::DarkGrey),
             Cell::new(format!("{sign}{d:.3} g/mol")).fg(color),
         ]);
     }
@@ -123,7 +123,7 @@ fn add_mono_rows(table: &mut Table, r: &AnalysisResult) {
     if let Some(d) = r.delta_mass {
         let (sign, color) = delta_style(d, r.mono_mass);
         table.add_row(vec![
-            Cell::new("  Δ mono  (achieved − target)").fg(TableColor::DarkGrey),
+            Cell::new("  Δ mono (achieved − target)").fg(TableColor::DarkGrey),
             Cell::new(format!("{sign}{d:.3} g/mol")).fg(color),
         ]);
     }

@@ -348,3 +348,48 @@ fn analyze_output_echoes_input_bigsmiles() {
         .success()
         .stdout(contains("{[]CC[]}"));
 }
+
+// ─── Libellé de stratégie dans la sortie ─────────────────────────────────────
+
+#[test]
+fn analyze_pe_by_repeat_strategy_label_shows_n() {
+    // Le label doit contenir "n = 10" pour que la stratégie soit non-ambiguë.
+    polysim()
+        .args(["analyze", "{[]CC[]}", "--by-repeat", "10"])
+        .assert()
+        .success()
+        .stdout(contains("n = 10"));
+}
+
+// ─── Lignes Δ (delta) ─────────────────────────────────────────────────────────
+
+#[test]
+fn analyze_pe_by_mn_shows_delta_mn_row() {
+    polysim()
+        .args(["analyze", "{[]CC[]}", "--by-mn", "200.0"])
+        .assert()
+        .success()
+        .stdout(contains("Δ Mn"));
+}
+
+#[test]
+fn analyze_pe_by_mass_shows_delta_mono_row() {
+    polysim()
+        .args(["analyze", "{[]CC[]}", "--by-mass", "200.0"])
+        .assert()
+        .success()
+        .stdout(contains("Δ mono"));
+}
+
+// ─── Groupes terminaux (begin / end) ─────────────────────────────────────────
+
+#[test]
+fn analyze_output_shows_begin_and_end_when_terminal_groups_present() {
+    // CC{[]CC[]}CC — "CC" en tête et en queue → lignes Begin et End visibles.
+    polysim()
+        .args(["analyze", "CC{[]CC[]}CC", "--by-repeat", "3"])
+        .assert()
+        .success()
+        .stdout(contains("Begin"))
+        .stdout(contains("End"));
+}
