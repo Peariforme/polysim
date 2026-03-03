@@ -14,8 +14,8 @@ repository = "https://github.com/Peariforme/polysim"
 homepage   = "https://github.com/Peariforme/polysim"
 
 [workspace.dependencies]
-bigsmiles  = { path = "../bigsmiles-rs/crates/bigsmiles" }
-opensmiles = { path = "../bigsmiles-rs/crates/opensmiles" }
+bigsmiles  = "0.1"
+opensmiles = "0.1"
 thiserror  = "2"
 rand       = "0.9"
 rand_distr = "0.5"

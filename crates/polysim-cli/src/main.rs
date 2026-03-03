@@ -60,6 +60,10 @@ enum Commands {
         /// Number of chains to generate.
         #[arg(long, env = "POLYSIM_NUM_CHAINS", default_value = "100")]
         num_chains: usize,
+
+        /// Random seed for reproducible results.
+        #[arg(long)]
+        seed: Option<u64>,
     },
 }
 
@@ -138,9 +142,10 @@ fn main() {
             pdi,
             distribution,
             num_chains,
+            seed,
         } => {
             if let Err(code) =
-                commands::generate::run(&bigsmiles, mn, pdi, &distribution, num_chains)
+                commands::generate::run(&bigsmiles, mn, pdi, &distribution, num_chains, seed)
             {
                 std::process::exit(code);
             }

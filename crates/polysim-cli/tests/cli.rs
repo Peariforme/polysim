@@ -393,3 +393,218 @@ fn analyze_output_shows_begin_and_end_when_terminal_groups_present() {
         .stdout(contains("Begin"))
         .stdout(contains("End"));
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── generate ──────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn generate_pe_exits_ok() {
+    polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805"])
+        .assert()
+        .success();
+}
+
+#[test]
+fn generate_output_contains_ensemble_banner() {
+    polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805", "--seed", "42"])
+        .assert()
+        .success()
+        .stdout(contains("Polydisperse Ensemble"));
+}
+
+#[test]
+fn generate_output_shows_mn_mw_pdi() {
+    polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805", "--seed", "42"])
+        .assert()
+        .success()
+        .stdout(contains("Mn (number-average)"))
+        .stdout(contains("Mw (weight-average)"))
+        .stdout(contains("Dispersity"));
+}
+
+#[test]
+fn generate_output_shows_median_and_std_dev() {
+    polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805", "--seed", "42"])
+        .assert()
+        .success()
+        .stdout(contains("Mn median"))
+        .stdout(contains("Mn std dev"));
+}
+
+#[test]
+fn generate_output_shows_mn_range() {
+    polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805", "--seed", "42"])
+        .assert()
+        .success()
+        .stdout(contains("Mn range"));
+}
+
+#[test]
+fn generate_seed_produces_reproducible_output() {
+    let out1 = polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805", "--seed", "99"])
+        .output()
+        .unwrap();
+    let out2 = polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805", "--seed", "99"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        out1.stdout, out2.stdout,
+        "Same seed should produce identical output"
+    );
+}
+
+#[test]
+fn generate_schulz_zimm_with_custom_pdi() {
+    polysim()
+        .args([
+            "generate",
+            "{[]CC[]}",
+            "--mn",
+            "2805",
+            "--distribution",
+            "schulz-zimm",
+            "--pdi",
+            "1.5",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success();
+}
+
+#[test]
+fn generate_log_normal_distribution() {
+    polysim()
+        .args([
+            "generate",
+            "{[]CC[]}",
+            "--mn",
+            "2805",
+            "--distribution",
+            "log-normal",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success();
+}
+
+#[test]
+fn generate_flory_distribution() {
+    polysim()
+        .args([
+            "generate",
+            "{[]CC[]}",
+            "--mn",
+            "2805",
+            "--distribution",
+            "flory",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success();
+}
+
+#[test]
+fn generate_flory_pdi_warning_on_stderr() {
+    polysim()
+        .args([
+            "generate",
+            "{[]CC[]}",
+            "--mn",
+            "2805",
+            "--distribution",
+            "flory",
+            "--pdi",
+            "1.5",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success()
+        .stderr(contains("warning"));
+}
+
+#[test]
+fn generate_custom_num_chains() {
+    polysim()
+        .args([
+            "generate",
+            "{[]CC[]}",
+            "--mn",
+            "2805",
+            "--num-chains",
+            "50",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success()
+        .stdout(contains("50"));
+}
+
+#[test]
+fn generate_invalid_bigsmiles_exits_failure() {
+    polysim()
+        .args(["generate", "{{invalid", "--mn", "2805"])
+        .assert()
+        .failure();
+}
+
+#[test]
+fn generate_no_stochastic_object_exits_failure() {
+    polysim()
+        .args(["generate", "CC", "--mn", "2805"])
+        .assert()
+        .failure();
+}
+
+#[test]
+fn generate_missing_mn_exits_failure() {
+    polysim().args(["generate", "{[]CC[]}"]).assert().failure();
+}
+
+#[test]
+fn generate_echoes_input_bigsmiles() {
+    polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805", "--seed", "42"])
+        .assert()
+        .success()
+        .stdout(contains("{[]CC[]}"));
+}
+
+#[test]
+fn generate_shows_distribution_label() {
+    polysim()
+        .args([
+            "generate",
+            "{[]CC[]}",
+            "--mn",
+            "2805",
+            "--distribution",
+            "schulz-zimm",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success()
+        .stdout(contains("Schulz-Zimm"));
+}
+
+#[test]
+fn generate_shows_target_mn() {
+    polysim()
+        .args(["generate", "{[]CC[]}", "--mn", "2805", "--seed", "42"])
+        .assert()
+        .success()
+        .stdout(contains("2805"));
+}
