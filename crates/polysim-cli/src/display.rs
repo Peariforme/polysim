@@ -109,7 +109,7 @@ fn add_mn_rows(table: &mut Table, r: &AnalysisResult) {
     if let Some(d) = r.delta_mn {
         let (sign, color) = delta_style(d, r.mn);
         table.add_row(vec![
-            Cell::new("  Δ Mn (achieved − target)").fg(TableColor::DarkGrey),
+            Cell::new("Δ Mn (achieved − target)").fg(TableColor::DarkGrey),
             Cell::new(format!("{sign}{d:.3} g/mol")).fg(color),
         ]);
     }
@@ -123,8 +123,117 @@ fn add_mono_rows(table: &mut Table, r: &AnalysisResult) {
     if let Some(d) = r.delta_mass {
         let (sign, color) = delta_style(d, r.mono_mass);
         table.add_row(vec![
-            Cell::new("  Δ mono (achieved − target)").fg(TableColor::DarkGrey),
+            Cell::new("Δ mono (achieved − target)").fg(TableColor::DarkGrey),
             Cell::new(format!("{sign}{d:.3} g/mol")).fg(color),
         ]);
+    }
+}
+
+// ═══ Ensemble report ═════════════════════════════════════════════════════════
+
+use crate::DistributionKind;
+use polysim_core::properties::ensemble::EnsembleStats;
+
+/// Prints the ensemble generation report to stdout.
+pub fn print_ensemble_report(
+    bigsmiles_str: &str,
+    distribution: &DistributionKind,
+    target_mn: f64,
+    target_pdi: f64,
+    stats: &EnsembleStats,
+) {
+    print_ensemble_banner();
+    print_ensemble_summary(bigsmiles_str, distribution, target_mn, target_pdi, stats);
+    print_ensemble_table(stats, target_mn, target_pdi);
+    println!();
+}
+
+fn print_ensemble_banner() {
+    println!();
+    let title = "  polysim — Polydisperse Ensemble  ";
+    let bar = "─".repeat(title.chars().count());
+    println!("  ╭{bar}╮");
+    println!("  │{}│", title.bold().cyan());
+    println!("  ╰{bar}╯");
+    println!();
+}
+
+fn print_ensemble_summary(
+    bigsmiles_str: &str,
+    distribution: &DistributionKind,
+    target_mn: f64,
+    target_pdi: f64,
+    stats: &EnsembleStats,
+) {
+    println!("  {:<15}{}", "BigSMILES".bold(), bigsmiles_str.yellow());
+    println!(
+        "  {:<15}{}",
+        "Distribution".bold(),
+        distribution.label().cyan()
+    );
+    println!("  {:<15}{:.1} g/mol", "Target Mn".bold(), target_mn);
+    println!("  {:<15}{:.3}", "Target PDI".bold(), target_pdi);
+    println!("  {:<15}{}", "Chains".bold(), stats.num_chains);
+    println!();
+}
+
+fn print_ensemble_table(stats: &EnsembleStats, target_mn: f64, target_pdi: f64) {
+    let mut table = Table::new();
+    table.load_preset(comfy_table::presets::UTF8_FULL);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
+    table.set_header(vec![
+        Cell::new("Property").add_attribute(Attribute::Bold),
+        Cell::new("Value").add_attribute(Attribute::Bold),
+    ]);
+
+    // Mn
+    table.add_row(vec![
+        Cell::new("Mn (number-average)"),
+        Cell::new(format!("{:.1} g/mol", stats.mn)).fg(TableColor::Green),
+    ]);
+    let delta_mn = stats.mn - target_mn;
+    let (sign, color) = delta_style(delta_mn, target_mn);
+    table.add_row(vec![
+        Cell::new("Δ Mn (achieved − target)").fg(TableColor::DarkGrey),
+        Cell::new(format!("{sign}{delta_mn:.1} g/mol")).fg(color),
+    ]);
+
+    // Mw
+    table.add_row(vec![
+        Cell::new("Mw (weight-average)"),
+        Cell::new(format!("{:.1} g/mol", stats.mw)).fg(TableColor::Green),
+    ]);
+
+    // PDI
+    let pdi_color = if (stats.pdi - target_pdi).abs() / target_pdi < 0.1 {
+        TableColor::Green
+    } else {
+        TableColor::Yellow
+    };
+    table.add_row(vec![
+        Cell::new("Dispersity Đ (Mw/Mn)"),
+        Cell::new(format!("{:.3}", stats.pdi)).fg(pdi_color),
+    ]);
+
+    // Median
+    table.add_row(vec![
+        Cell::new("Mn median"),
+        Cell::new(format!("{:.1} g/mol", stats.mn_median)).fg(TableColor::Green),
+    ]);
+
+    // Std dev
+    table.add_row(vec![
+        Cell::new("Mn std dev (σ)"),
+        Cell::new(format!("{:.1} g/mol", stats.mn_std_dev)).fg(TableColor::Yellow),
+    ]);
+
+    // Range
+    table.add_row(vec![
+        Cell::new("Mn range"),
+        Cell::new(format!("{:.1} — {:.1} g/mol", stats.mn_min, stats.mn_max)).fg(TableColor::Cyan),
+    ]);
+
+    for line in table.to_string().lines() {
+        println!("  {line}");
     }
 }

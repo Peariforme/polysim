@@ -1,4 +1,4 @@
-use bigsmiles::{BigSmiles, BigSmilesSegment, StochasticObject};
+use bigsmiles::BigSmiles;
 
 use crate::{
     error::PolySimError,
@@ -50,8 +50,10 @@ impl LinearBuilder {
     /// assert_eq!(chain.repeat_count, 3);
     /// ```
     pub fn homopolymer(&self) -> Result<PolymerChain, PolySimError> {
-        let stoch =
-            find_first_stochastic(&self.bigsmiles).ok_or(PolySimError::NoStochasticObject)?;
+        let stoch = self
+            .bigsmiles
+            .first_stochastic()
+            .ok_or(PolySimError::NoStochasticObject)?;
 
         if stoch.repeat_units.len() != 1 {
             return Err(PolySimError::RepeatUnitCount {
@@ -118,13 +120,6 @@ impl LinearBuilder {
 
 // --- internal helpers -------------------------------------------------------
 
-fn find_first_stochastic(bs: &BigSmiles) -> Option<&StochasticObject> {
-    bs.segments.iter().find_map(|seg| match seg {
-        BigSmilesSegment::Stochastic(obj) => Some(obj),
-        _ => None,
-    })
-}
-
 /// Déduit le nombre de répétitions à partir d'une masse cible.
 ///
 /// Construit deux chaînes d'essai (n=1 et n=2) pour déterminer la masse par
@@ -164,7 +159,7 @@ fn resolve_n_by_mass(
 ///
 /// Returns [`PolySimError::RingNumberOverflow`] if the repeat unit itself uses
 /// more than 99 distinct ring-closure numbers (already invalid SMILES).
-fn build_linear_smiles(smiles_raw: &str, n: usize) -> Result<String, PolySimError> {
+pub(crate) fn build_linear_smiles(smiles_raw: &str, n: usize) -> Result<String, PolySimError> {
     let max_ring = max_ring_number(smiles_raw);
 
     // Pathological case: the repeat unit alone already overflows SMILES ring numbers.

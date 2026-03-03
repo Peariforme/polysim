@@ -16,6 +16,8 @@ homepage.workspace   = true
 bigsmiles  = { workspace = true }
 opensmiles = { workspace = true }
 thiserror  = { workspace = true }
+rand       = { workspace = true }
+rand_distr = { workspace = true }
 
 [dev-dependencies]
 bigsmiles = { workspace = true }

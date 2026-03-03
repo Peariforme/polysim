@@ -8,4 +8,10 @@ name = "polysim-core"
 git_release_enable = true
 changelog_update = true
 
-# polysim-cli has publish = false and is intentionally omitted here.
+[[package]]
+name = "polysim-cli"
+# polysim-cli has publish = false in Cargo.toml, so release-plz will skip
+# `cargo publish` but still create git tags and GitHub releases.
+# The tag format (polysim-cli-v*) triggers dist.yml to build platform binaries.
+git_release_enable = true
+changelog_update = true

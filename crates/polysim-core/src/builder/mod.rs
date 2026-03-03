@@ -5,7 +5,9 @@
 //! [`PolymerChain`](crate::PolymerChain) instances.
 
 pub mod branched;
+pub mod ensemble;
 pub mod linear;
 pub mod strategy;
 
+pub use ensemble::EnsembleBuilder;
 pub use strategy::BuildStrategy;

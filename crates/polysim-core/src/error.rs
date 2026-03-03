@@ -29,6 +29,10 @@ pub enum PolySimError {
     #[error("Weight fractions must sum to 1.0 (got {sum:.4})")]
     InvalidFractions { sum: f64 },
 
+    /// An ensemble was created with zero chains.
+    #[error("Cannot create an ensemble with zero chains")]
+    EmptyEnsemble,
+
     /// A single repeat unit already uses more than 99 distinct ring-closure numbers,
     /// which exceeds the SMILES specification.
     #[error(
