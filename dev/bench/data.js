@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772544193395,
+  "lastUpdate": 1772563047624,
   "repoUrl": "https://github.com/Peariforme/polysim",
   "entries": {
     "Polymer Builder Benchmarks": [
@@ -395,6 +395,138 @@ window.BENCHMARK_DATA = {
             "name": "molecular_weight/by_target_mn/polyethylene/28255",
             "value": 115626,
             "range": "± 500",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "47952322+Peariforme@users.noreply.github.com",
+            "name": "Peariforme",
+            "username": "Peariforme"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b7d8e7444921c63cab84c960cf9dd4ec8a1cef2f",
+          "message": "Feat/chain distribution (#7)\n\n* ci(release-plz): enable automated tags and releases for polysim-cli\n\nAdd polysim-cli to release-plz.toml so it creates git tags\n(polysim-cli-v*) and GitHub releases on version bumps. The tag\npattern triggers dist.yml which builds platform binaries.\npublish = false in Cargo.toml ensures no crates.io upload.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\n\n* feat: add polydisperse ensemble generation with chain distributions\n\nAdd EnsembleBuilder and `polysim generate` command to create\npolydisperse polymer ensembles from BigSMILES input.\n\n- Implement Schulz-Zimm, log-normal, and Flory chain-length distributions\n- Add EnsembleStats with Mn, Mw, PDI, median, std dev, and range\n- Add `generate` CLI subcommand with --mn, --pdi, --distribution,\n  --num-chains, and --seed options\n- Switch workspace dependencies to crates.io (bigsmiles/opensmiles 0.1)\n- Add EmptyEnsemble error variant\n- 17 new CLI tests for generate command\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-03-03T19:33:01+01:00",
+          "tree_id": "4534c92c61a22fa32d04532694c733e83067f31f",
+          "url": "https://github.com/Peariforme/polysim/commit/b7d8e7444921c63cab84c960cf9dd4ec8a1cef2f"
+        },
+        "date": 1772563047230,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "homopolymer/polyethylene/10",
+            "value": 1595,
+            "range": "± 53",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/100",
+            "value": 11943,
+            "range": "± 131",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/1000",
+            "value": 110427,
+            "range": "± 1843",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/10000",
+            "value": 1091695,
+            "range": "± 21275",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/10",
+            "value": 8922,
+            "range": "± 40",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/100",
+            "value": 93233,
+            "range": "± 1118",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/1000",
+            "value": 910651,
+            "range": "± 6518",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/10",
+            "value": 1321,
+            "range": "± 8",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/100",
+            "value": 9986,
+            "range": "± 41",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/1000",
+            "value": 89573,
+            "range": "± 665",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polystyrene/10",
+            "value": 7674,
+            "range": "± 62",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polystyrene/100",
+            "value": 76341,
+            "range": "± 752",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/10",
+            "value": 1469,
+            "range": "± 21",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/100",
+            "value": 9991,
+            "range": "± 140",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/1000",
+            "value": 89905,
+            "range": "± 1792",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/282",
+            "value": 2976,
+            "range": "± 9",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/2825",
+            "value": 13870,
+            "range": "± 91",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/28255",
+            "value": 114492,
+            "range": "± 730",
             "unit": "ns/iter"
           }
         ]
