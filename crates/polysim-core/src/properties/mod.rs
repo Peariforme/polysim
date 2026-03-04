@@ -4,5 +4,9 @@
 
 pub mod ensemble;
 pub mod formula;
+pub mod group_contribution;
+pub mod mechanical;
 pub mod molecular_weight;
+pub mod optical;
+pub mod solubility;
 pub mod thermal;
