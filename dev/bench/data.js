@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772563305193,
+  "lastUpdate": 1772617846694,
   "repoUrl": "https://github.com/Peariforme/polysim",
   "entries": {
     "Polymer Builder Benchmarks": [
@@ -659,6 +659,138 @@ window.BENCHMARK_DATA = {
             "name": "molecular_weight/by_target_mn/polyethylene/28255",
             "value": 112938,
             "range": "± 1712",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "47952322+Peariforme@users.noreply.github.com",
+            "name": "Peariforme",
+            "username": "Peariforme"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "39800550722a2012d1d7a3b664da639a0d8ea75d",
+          "message": "feat(phase1): implement all Phase 1 polymer architectures (#90)\n\n* feat(core): implement Phase 1 polymer architectures (US-1.1.1 → US-1.4.2)\n\n## Nouveaux builders\n\n### LinearBuilder (linear.rs)\n- US-1.1.1: `random_copolymer(&[f64])` — copolymère statistique avec seed\n- US-1.1.2: `alternating_copolymer()` — séquence A-B-A-B cyclique\n- US-1.1.3: `block_copolymer(&[usize])` — diblock/triblock/multiblock\n- US-1.1.4: `gradient_copolymer(&GradientProfile)` — gradient linéaire ou sigmoïde\n- US-1.2.5: `cyclic_homopolymer()` — ring closure premier↔dernier atome\n- US-1.3.3: `with_end_groups()` — préfixe/suffixe BigSMILES inclus dans SMILES + Mn\n\n### BranchedBuilder (branched.rs)\n- US-1.2.1: `comb_polymer(branch_every)` — peigne régulier backbone+branch\n- US-1.2.2: `graft_copolymer(graft_fraction, seed)` — greffage aléatoire reproductible\n- US-1.2.3: `star_polymer(arms)` — étoile 3–12 bras\n- US-1.2.4: `dendrimer(generation, branching_factor)` — dendrimère G1–G6\n\n### EnsembleBuilder (ensemble.rs)\n- `random_copolymer_ensemble`, `alternating_copolymer_ensemble`,\n  `block_copolymer_ensemble`, `gradient_copolymer_ensemble`\n\n## PolymerChain enrichi (US-1.3.1, US-1.3.2)\n- Nouveau champ `composition: Vec<MonomerUnit>` (fraction molaire par unité)\n- Nouveau champ `architecture: Architecture` (Linear/Star/Comb/Dendrimer/Cyclic/Gradient/Graft)\n- API builder fluent: `.with_composition()` et `.with_architecture()`\n\n## CLI (US-1.4.1, US-1.4.2)\n- `polysim analyze` : `--arch random|alternating|block|gradient`\n- `polysim generate` : idem + `--gradient-profile linear|sigmoid`,\n  `--gradient-f-start`, `--gradient-f-end`\n\n## Tests: 35 nouveaux tests (tous verts)\n- `tests/copolymer.rs` : 17 tests random/alternating/block + ensembles\n- `tests/branched.rs` : 9 tests comb/graft/star/dendrimer\n- `tests/gradient_cyclic.rs` : 9 tests gradient/cyclic/end-groups\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* docs: add roadmap\n\n* test(core): add cyclic regression test for two-letter atoms (Cl)\n\nVérifie que make_cyclic_smiles ne corrompt pas les atomes bi-lettres\ncomme Cl lors de l'insertion du ring closure.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-03-04T10:46:33+01:00",
+          "tree_id": "79d011d591706e3db03de6ac70d3f7f533128534",
+          "url": "https://github.com/Peariforme/polysim/commit/39800550722a2012d1d7a3b664da639a0d8ea75d"
+        },
+        "date": 1772617846192,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "homopolymer/polyethylene/10",
+            "value": 1687,
+            "range": "± 10",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/100",
+            "value": 12080,
+            "range": "± 100",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/1000",
+            "value": 110208,
+            "range": "± 4008",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polyethylene/10000",
+            "value": 1103761,
+            "range": "± 24538",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/10",
+            "value": 8334,
+            "range": "± 52",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/100",
+            "value": 85866,
+            "range": "± 3992",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "homopolymer/polystyrene/1000",
+            "value": 840919,
+            "range": "± 3918",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/10",
+            "value": 1283,
+            "range": "± 5",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/100",
+            "value": 9737,
+            "range": "± 83",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polyethylene/1000",
+            "value": 89442,
+            "range": "± 362",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polystyrene/10",
+            "value": 7675,
+            "range": "± 18",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/average_mass/polystyrene/100",
+            "value": 75190,
+            "range": "± 221",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/10",
+            "value": 1417,
+            "range": "± 6",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/100",
+            "value": 10221,
+            "range": "± 113",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/monoisotopic_mass/polyethylene/1000",
+            "value": 90247,
+            "range": "± 2182",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/282",
+            "value": 2932,
+            "range": "± 54",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/2825",
+            "value": 13743,
+            "range": "± 83",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "molecular_weight/by_target_mn/polyethylene/28255",
+            "value": 113801,
+            "range": "± 397",
             "unit": "ns/iter"
           }
         ]
