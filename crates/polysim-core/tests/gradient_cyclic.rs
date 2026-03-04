@@ -106,6 +106,36 @@ fn cyclic_needs_exactly_1_unit() {
     assert!(matches!(result, Err(PolySimError::RepeatUnitCount { .. })));
 }
 
+// ═══ Cyclic with two-letter atoms ════════════════════════════════════════════
+
+#[test]
+fn cyclic_chlorinated_monomer() {
+    // CCCl is a repeat unit containing Cl (two-letter atom)
+    let bs = parse("{[$]CCCl[$]}").unwrap();
+    let chain = LinearBuilder::new(bs, BuildStrategy::ByRepeatCount(3))
+        .cyclic_homopolymer()
+        .unwrap();
+    assert_eq!(chain.architecture, Architecture::Cyclic);
+    // SMILES should start with 'C1' and end with '1', and contain 'Cl'
+    assert!(
+        chain.smiles.contains('1'),
+        "ring closure missing: {}",
+        chain.smiles
+    );
+    assert!(
+        chain.smiles.contains("Cl"),
+        "Cl atom lost: {}",
+        chain.smiles
+    );
+    // Ring label should appear exactly twice (open + close)
+    assert_eq!(
+        chain.smiles.matches('1').count(),
+        2,
+        "ring label count: {}",
+        chain.smiles
+    );
+}
+
 // ═══ End groups ══════════════════════════════════════════════════════════════
 
 #[test]
