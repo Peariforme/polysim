@@ -172,29 +172,29 @@ fn hansen_nylon66_strong_hbond() {
 
 // ── Tests RED (miscibilité) ───────────────────────────────────────────────────
 
-/// PS / toluène : miscibles — RED < 1 avec R0=12.7 (rayon sphère Hansen PS)
+/// PS / toluène : miscibles — RED < 1 avec R0=8.8 (rayon sphère Hansen PS, Hansen 2007)
 /// Toluène Hansen : delta_d=18.0, delta_p=1.4, delta_h=2.0 (Hansen 2007)
 #[test]
 fn hansen_red_ps_toluene_miscible() {
     let ps_chain = build_homo("{[]CC(c1ccccc1)[]}", 50);
     let ps = hansen_solubility_parameters(&ps_chain).unwrap();
     let toluene = solvent(18.0, 1.4, 2.0);
-    // R0 = 12.7 (MPa)^0.5 : rayon de la sphere de solubilite de PS (Hansen 2007)
-    let red = red_distance(&ps, &toluene, 12.7);
+    // R0 = 8.8 (MPa)^0.5 : rayon de la sphere de solubilite de PS (Hansen 2007 Table A.1)
+    let red = red_distance(&ps, &toluene, 8.8);
     assert!(
         red < 1.0,
         "PS/toluene doit etre miscible (RED < 1), got RED={red:.3}"
     );
 }
 
-/// PS / eau : immiscibles — RED > 1 avec R0=12.7
+/// PS / eau : immiscibles — RED > 1 avec R0=8.8
 /// Eau Hansen : delta_d=15.6, delta_p=16.0, delta_h=42.3 (Hansen 2007)
 #[test]
 fn hansen_red_ps_water_immiscible() {
     let ps_chain = build_homo("{[]CC(c1ccccc1)[]}", 50);
     let ps = hansen_solubility_parameters(&ps_chain).unwrap();
     let water = solvent(15.6, 16.0, 42.3);
-    let red = red_distance(&ps, &water, 12.7);
+    let red = red_distance(&ps, &water, 8.8);
     assert!(
         red > 1.0,
         "PS/eau doit etre immiscible (RED > 1), got RED={red:.3}"
