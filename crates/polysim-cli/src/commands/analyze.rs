@@ -11,21 +11,45 @@ use polysim_core::{
 
 use crate::display;
 use crate::report::AnalysisResult;
-use crate::StrategyArgs;
+use crate::{Architecture, ArchitectureArgs, StrategyArgs};
 
 /// Entry point for the `analyze` subcommand.
-pub fn run(bigsmiles_str: &str, args: &StrategyArgs) -> Result<(), i32> {
+pub fn run(
+    bigsmiles_str: &str,
+    args: &StrategyArgs,
+    arch_args: &ArchitectureArgs,
+) -> Result<(), i32> {
     let bigsmiles = parse(bigsmiles_str).map_err(report_err)?;
 
-    let chain = LinearBuilder::new(bigsmiles.clone(), args.build_strategy())
-        .homopolymer()
-        .map_err(report_err)?;
+    let mut builder = LinearBuilder::new(bigsmiles.clone(), args.build_strategy());
+    if let Some(seed) = arch_args.copolymer_seed {
+        builder = builder.seed(seed);
+    }
+
+    let chain = match arch_args.arch {
+        Architecture::Homo => builder.homopolymer(),
+        Architecture::Random => {
+            let fractions = arch_args.fractions.as_deref().unwrap_or(&[]);
+            builder.random_copolymer(fractions)
+        }
+        Architecture::Alternating => builder.alternating_copolymer(),
+        Architecture::Block => {
+            let lengths = arch_args.block_lengths.as_deref().unwrap_or(&[]);
+            builder.block_copolymer(lengths)
+        }
+        Architecture::Gradient => {
+            let profile = arch_args.gradient_profile();
+            builder.gradient_copolymer(&profile)
+        }
+    }
+    .map_err(report_err)?;
 
     let mono_mass = monoisotopic_mass(&chain);
 
     let result = AnalysisResult {
         bigsmiles_str: bigsmiles_str.to_owned(),
         strategy_label: args.label(),
+        architecture_label: arch_args.arch.label().to_owned(),
         begin_block: segments_to_smiles(bigsmiles.prefix_segments()),
         end_block: segments_to_smiles(bigsmiles.suffix_segments()),
         smiles: chain.smiles.clone(),

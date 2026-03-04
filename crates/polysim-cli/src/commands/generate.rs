@@ -9,7 +9,7 @@ use polysim_core::{
 };
 
 use crate::display;
-use crate::DistributionKind;
+use crate::{Architecture, ArchitectureArgs, DistributionKind};
 
 /// Entry point for the `generate` subcommand.
 pub fn run(
@@ -19,6 +19,7 @@ pub fn run(
     distribution: &DistributionKind,
     num_chains: usize,
     seed: Option<u64>,
+    arch_args: &ArchitectureArgs,
 ) -> Result<(), i32> {
     let bs = parse(bigsmiles_str).map_err(report_err)?;
 
@@ -36,11 +37,18 @@ pub fn run(
         eprintln!();
     }
 
-    let ensemble =
-        build_ensemble(distribution, bs, mn, pdi, num_chains, seed).map_err(report_err)?;
+    let ensemble = build_ensemble(distribution, bs, mn, pdi, num_chains, seed, arch_args)
+        .map_err(report_err)?;
 
     let stats = EnsembleStats::from_ensemble(&ensemble);
-    display::print_ensemble_report(bigsmiles_str, distribution, mn, pdi, &stats);
+    display::print_ensemble_report(
+        bigsmiles_str,
+        distribution,
+        &arch_args.arch,
+        mn,
+        pdi,
+        &stats,
+    );
     Ok(())
 }
 
@@ -51,11 +59,12 @@ fn build_ensemble(
     pdi: f64,
     num_chains: usize,
     seed: Option<u64>,
+    arch_args: &ArchitectureArgs,
 ) -> Result<PolymerEnsemble, PolySimError> {
     match distribution {
-        DistributionKind::Flory => build(Flory, bs, mn, pdi, num_chains, seed),
-        DistributionKind::LogNormal => build(LogNormal, bs, mn, pdi, num_chains, seed),
-        DistributionKind::SchulzZimm => build(SchulzZimm, bs, mn, pdi, num_chains, seed),
+        DistributionKind::Flory => build(Flory, bs, mn, pdi, num_chains, seed, arch_args),
+        DistributionKind::LogNormal => build(LogNormal, bs, mn, pdi, num_chains, seed, arch_args),
+        DistributionKind::SchulzZimm => build(SchulzZimm, bs, mn, pdi, num_chains, seed, arch_args),
     }
 }
 
@@ -66,12 +75,29 @@ fn build<D: ChainLengthDistribution>(
     pdi: f64,
     num_chains: usize,
     seed: Option<u64>,
+    arch_args: &ArchitectureArgs,
 ) -> Result<PolymerEnsemble, PolySimError> {
     let mut builder = EnsembleBuilder::new(bs, dist, mn, pdi).num_chains(num_chains);
     if let Some(s) = seed {
         builder = builder.seed(s);
     }
-    builder.homopolymer_ensemble()
+
+    match arch_args.arch {
+        Architecture::Homo => builder.homopolymer_ensemble(),
+        Architecture::Random => {
+            let fractions = arch_args.fractions.as_deref().unwrap_or(&[]);
+            builder.random_copolymer_ensemble(fractions)
+        }
+        Architecture::Alternating => builder.alternating_copolymer_ensemble(),
+        Architecture::Block => {
+            let ratios = arch_args.block_ratios.as_deref().unwrap_or(&[]);
+            builder.block_copolymer_ensemble(ratios)
+        }
+        Architecture::Gradient => {
+            let profile = arch_args.gradient_profile();
+            builder.gradient_copolymer_ensemble(&profile)
+        }
+    }
 }
 
 fn report_err(e: impl std::fmt::Display) -> i32 {
