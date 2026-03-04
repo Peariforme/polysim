@@ -118,10 +118,68 @@ pub enum CrystallizationTendency {
     Amorphous,
 }
 
-/// Estimates the crystallisation tendency of a polymer chain based on its
-/// structural regularity and symmetry.
-pub fn crystallization_tendency(_chain: &PolymerChain) -> CrystallizationTendency {
-    todo!("estimate crystallisation tendency from SMILES regularity/symmetry")
+/// Estimates the crystallisation tendency of a polymer chain based on
+/// the difference between predicted Tm and Tg.
+///
+/// **Classification rules (Van Krevelen heuristic):**
+///
+/// | Condition                            | Tendency    |
+/// |--------------------------------------|-------------|
+/// | Tm is `None` (amorphous)             | `Amorphous` |
+/// | `Tm - Tg > 100 K` and high symmetry  | `High`      |
+/// | `Tm - Tg > 50 K`                     | `Medium`    |
+/// | `Tm - Tg > 0 K`                      | `Low`       |
+/// | else                                 | `Amorphous` |
+///
+/// Symmetry is estimated by counting the number of distinct heavy-atom
+/// substituent types on the backbone carbons: fewer substituent types
+/// imply a more regular, symmetric chain.
+///
+/// # Panics
+///
+/// Returns `Amorphous` if Tg or Tm computation fails (e.g. unrecognised groups).
+pub fn crystallization_tendency(chain: &PolymerChain) -> CrystallizationTendency {
+    let tg = match tg_van_krevelen(chain) {
+        Ok(v) => v,
+        Err(_) => return CrystallizationTendency::Amorphous,
+    };
+    let tm_opt = match tm_van_krevelen(chain) {
+        Ok(v) => v,
+        Err(_) => return CrystallizationTendency::Amorphous,
+    };
+
+    let tm = match tm_opt {
+        Some(t) => t,
+        None => return CrystallizationTendency::Amorphous,
+    };
+
+    let delta = tm - tg;
+
+    if delta > 100.0 && has_high_symmetry(chain) {
+        CrystallizationTendency::High
+    } else if delta > 50.0 {
+        CrystallizationTendency::Medium
+    } else if delta > 0.0 {
+        CrystallizationTendency::Low
+    } else {
+        CrystallizationTendency::Amorphous
+    }
+}
+
+/// Heuristic for backbone symmetry: a chain is considered highly symmetric
+/// if the repeat unit contains only C and H atoms (no heteroatom substituents).
+fn has_high_symmetry(chain: &PolymerChain) -> bool {
+    use crate::properties::group_contribution::GroupDatabase;
+    let groups = match GroupDatabase::decompose(chain) {
+        Ok(g) => g,
+        Err(_) => return false,
+    };
+    // High symmetry = only aliphatic carbon groups (CH3, CH2, CH, >C<).
+    // Any polar/aromatic group breaks high symmetry.
+    let aliphatic_names = ["-CH3", "-CH2-", "-CH<", ">C<"];
+    groups
+        .iter()
+        .all(|gm| aliphatic_names.contains(&gm.group.name))
 }
 
 #[cfg(test)]
