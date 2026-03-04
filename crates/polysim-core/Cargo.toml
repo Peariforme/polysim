@@ -33,3 +33,11 @@ harness = false
 [[bench]]
 name    = "molecular_weight"
 harness = false
+
+[[bench]]
+name    = "group_contribution"
+harness = false
+
+[[bench]]
+name    = "density"
+harness = false
