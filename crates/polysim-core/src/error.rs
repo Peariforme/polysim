@@ -46,4 +46,8 @@ pub enum PolySimError {
          SMILES maximum is {max_supported}"
     )]
     RingNumberOverflow { max_ring: u32, max_supported: u32 },
+
+    /// The SMILES decomposition into functional groups failed.
+    #[error("Group decomposition error: {0}")]
+    GroupDecomposition(String),
 }
