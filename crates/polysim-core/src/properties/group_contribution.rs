@@ -66,7 +66,7 @@ pub trait GroupContributionMethod {
 /// Methyl group -CH3.
 static GROUP_CH3: Group = Group {
     name: "-CH3",
-    yg: 2.7,
+    yg: 4.0,
     ym: 2.0,
     vw: 13.67,
     ecoh: 4500.0,
@@ -86,20 +86,20 @@ static GROUP_CH2: Group = Group {
 /// Methine group -CH<.
 static GROUP_CH: Group = Group {
     name: "-CH<",
-    yg: 2.7,
+    yg: 1.0,
     ym: 3.0,
     vw: 6.78,
-    ecoh: 3600.0,
+    ecoh: 3400.0,
     ri: 3.63,
 };
 
 /// Quaternary carbon >C<.
 static GROUP_C: Group = Group {
     name: ">C<",
-    yg: 2.0,
+    yg: -1.0,
     ym: 2.2,
     vw: 3.33,
-    ecoh: 3000.0,
+    ecoh: 2100.0,
     ri: 2.61,
 };
 
@@ -126,9 +126,9 @@ static GROUP_PHENYLENE: Group = Group {
 /// Ether group -O-.
 static GROUP_ETHER: Group = Group {
     name: "-O-",
-    yg: 3.0,
+    yg: 5.3,
     ym: 5.0,
-    vw: 3.8,
+    vw: 5.0,
     ecoh: 4200.0,
     ri: 1.64,
 };
@@ -136,9 +136,9 @@ static GROUP_ETHER: Group = Group {
 /// Ester group -COO-.
 static GROUP_ESTER: Group = Group {
     name: "-COO-",
-    yg: 15.0,
+    yg: 25.0,
     ym: 18.0,
-    vw: 18.0,
+    vw: 22.0,
     ecoh: 18000.0,
     ri: 6.38,
 };
@@ -148,17 +148,17 @@ static GROUP_KETONE: Group = Group {
     name: "-CO-",
     yg: 12.0,
     ym: 15.0,
-    vw: 14.7,
-    ecoh: 15100.0,
+    vw: 17.0,
+    ecoh: 17400.0,
     ri: 4.6,
 };
 
 /// Hydroxyl group -OH.
 static GROUP_OH: Group = Group {
     name: "-OH",
-    yg: 30.0,
+    yg: 23.6,
     ym: 35.0,
-    vw: 8.0,
+    vw: 10.0,
     ecoh: 29800.0,
     ri: 2.75,
 };
@@ -166,10 +166,10 @@ static GROUP_OH: Group = Group {
 /// Carboxylic acid group -COOH.
 static GROUP_COOH: Group = Group {
     name: "-COOH",
-    yg: 30.0,
+    yg: 45.0,
     ym: 45.0,
     vw: 28.5,
-    ecoh: 35000.0,
+    ecoh: 27000.0,
     ri: 6.42,
 };
 
