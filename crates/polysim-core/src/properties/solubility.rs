@@ -42,9 +42,10 @@ pub fn hildebrand_solubility_parameter(chain: &PolymerChain) -> Result<f64, Poly
         ));
     }
 
-    // Ecoh is in J/mol, Vw is in cm^3/mol.
-    // delta = sqrt(Ecoh / Vw) in (J/cm^3)^0.5 = (MPa)^0.5
-    Ok((ecoh / vw).sqrt())
+    // Vmol = Vw / 0.667 for flexible-chain polymers (VK Table 4.3).
+    // delta = sqrt(Ecoh / Vmol) in (J/cm^3)^0.5 = (MPa)^0.5
+    let vmol = vw / 0.667;
+    Ok((ecoh / vmol).sqrt())
 }
 
 /// Hansen solubility parameters in (MPa)^0.5.
@@ -98,9 +99,11 @@ pub fn hansen_solubility_parameters(chain: &PolymerChain) -> Result<HansenParams
     let ep = total_ep(&groups);
     let eh = total_eh(&groups);
 
-    let delta_d = (ed / vw).sqrt();
-    let delta_p = (ep / vw).sqrt();
-    let delta_h = (eh / vw).sqrt();
+    // Vmol = Vw / 0.667 for flexible-chain polymers (VK Table 4.3).
+    let vmol = vw / 0.667;
+    let delta_d = (ed / vmol).sqrt();
+    let delta_p = (ep / vmol).sqrt();
+    let delta_h = (eh / vmol).sqrt();
     let delta_t = (delta_d.powi(2) + delta_p.powi(2) + delta_h.powi(2)).sqrt();
 
     Ok(HansenParams {

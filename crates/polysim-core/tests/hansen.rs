@@ -117,8 +117,8 @@ fn hansen_ps_purely_dispersive() {
     let chain = build_homo("{[]CC(c1ccccc1)[]}", 50);
     let h = hansen_solubility_parameters(&chain).unwrap();
     assert!(
-        h.delta_d > 18.0,
-        "PS delta_d doit etre > 18, got {:.2}",
+        h.delta_d > 15.0,
+        "PS delta_d doit etre > 15, got {:.2}",
         h.delta_d
     );
     assert!(

@@ -45,6 +45,8 @@ pub struct Group {
     pub ep: f64,
     /// Hydrogen-bonding cohesive energy contribution (J/mol) — Hansen δh component.
     pub eh: f64,
+    /// Rao function for Young's modulus prediction.
+    pub rao: f64,
 }
 
 /// Result of matching a single group in the decomposition.
@@ -80,6 +82,7 @@ static GROUP_CH3: Group = Group {
     ed: 4500.0,
     ep: 0.0,
     eh: 0.0,
+    rao: 1040.0,
 };
 
 /// Methylene group -CH2-.
@@ -93,6 +96,7 @@ static GROUP_CH2: Group = Group {
     ed: 4100.0,
     ep: 0.0,
     eh: 0.0,
+    rao: 880.0,
 };
 
 /// Methine group -CH<.
@@ -106,6 +110,7 @@ static GROUP_CH: Group = Group {
     ed: 3400.0,
     ep: 0.0,
     eh: 0.0,
+    rao: 720.0,
 };
 
 /// Quaternary carbon >C<.
@@ -119,6 +124,7 @@ static GROUP_C: Group = Group {
     ed: 2100.0,
     ep: 0.0,
     eh: 0.0,
+    rao: 560.0,
 };
 
 /// Phenyl group -C6H5 (pendant aromatic ring).
@@ -132,6 +138,7 @@ static GROUP_PHENYL: Group = Group {
     ed: 31900.0,
     ep: 0.0,
     eh: 0.0,
+    rao: 5320.0,
 };
 
 /// Para-phenylene group -C6H4- (in-chain aromatic ring).
@@ -145,6 +152,7 @@ static GROUP_PHENYLENE: Group = Group {
     ed: 31500.0,
     ep: 0.0,
     eh: 0.0,
+    rao: 5160.0,
 };
 
 /// Ether group -O-.
@@ -158,6 +166,7 @@ static GROUP_ETHER: Group = Group {
     ed: 1600.0,
     ep: 1600.0,
     eh: 1000.0,
+    rao: 440.0,
 };
 
 /// Ester group -COO-.
@@ -168,9 +177,10 @@ static GROUP_ESTER: Group = Group {
     vw: 22.0,
     ecoh: 18000.0,
     ri: 6.38,
-    ed: 8000.0,
+    ed: 10000.0,
     ep: 5000.0,
-    eh: 5000.0,
+    eh: 3000.0,
+    rao: 1460.0,
 };
 
 /// Ketone group -CO-.
@@ -184,6 +194,7 @@ static GROUP_KETONE: Group = Group {
     ed: 7400.0,
     ep: 6000.0,
     eh: 4000.0,
+    rao: 1020.0,
 };
 
 /// Hydroxyl group -OH.
@@ -197,6 +208,7 @@ static GROUP_OH: Group = Group {
     ed: 4800.0,
     ep: 3000.0,
     eh: 22000.0,
+    rao: 540.0,
 };
 
 /// Carboxylic acid group -COOH.
@@ -210,6 +222,7 @@ static GROUP_COOH: Group = Group {
     ed: 7000.0,
     ep: 5000.0,
     eh: 15000.0,
+    rao: 1560.0,
 };
 
 /// Secondary amide group -CONH-.
@@ -223,6 +236,7 @@ static GROUP_AMIDE: Group = Group {
     ed: 8000.0,
     ep: 6000.0,
     eh: 22000.0,
+    rao: 1720.0,
 };
 
 /// Primary amide group -CONH2.
@@ -236,6 +250,7 @@ static GROUP_AMIDE_PRIMARY: Group = Group {
     ed: 10000.0,
     ep: 8000.0,
     eh: 32000.0,
+    rao: 2060.0,
 };
 
 /// Nitrile group -CN.
@@ -249,6 +264,7 @@ static GROUP_CN: Group = Group {
     ed: 8000.0,
     ep: 14000.0,
     eh: 2000.0,
+    rao: 1440.0,
 };
 
 /// Chloro group -Cl.
@@ -262,6 +278,7 @@ static GROUP_CL: Group = Group {
     ed: 8800.0,
     ep: 4000.0,
     eh: 0.0,
+    rao: 840.0,
 };
 
 /// Fluoro group -F.
@@ -275,6 +292,7 @@ static GROUP_F: Group = Group {
     ed: 3200.0,
     ep: 1000.0,
     eh: 0.0,
+    rao: 320.0,
 };
 
 /// Siloxane group -Si-O-.
@@ -288,6 +306,7 @@ static GROUP_SILOXANE: Group = Group {
     ed: 2200.0,
     ep: 1000.0,
     eh: 1000.0,
+    rao: 1200.0,
 };
 
 // ---------------------------------------------------------------------------
@@ -626,6 +645,11 @@ pub fn total_ep(groups: &[GroupMatch]) -> f64 {
 /// Total hydrogen-bonding cohesive energy (J/mol) from group contributions.
 pub fn total_eh(groups: &[GroupMatch]) -> f64 {
     sum_contribution(groups, |g| g.eh)
+}
+
+/// Total Rao function (sound velocity increment) from group contributions.
+pub fn total_rao(groups: &[GroupMatch]) -> f64 {
+    sum_contribution(groups, |g| g.rao)
 }
 
 // ---------------------------------------------------------------------------
