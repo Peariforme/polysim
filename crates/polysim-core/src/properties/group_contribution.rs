@@ -39,6 +39,12 @@ pub struct Group {
     pub ecoh: f64,
     /// Molar refraction Lorentz-Lorenz (cm^3/mol).
     pub ri: f64,
+    /// Dispersive cohesive energy contribution (J/mol) — Hansen δd component.
+    pub ed: f64,
+    /// Polar cohesive energy contribution (J/mol) — Hansen δp component.
+    pub ep: f64,
+    /// Hydrogen-bonding cohesive energy contribution (J/mol) — Hansen δh component.
+    pub eh: f64,
 }
 
 /// Result of matching a single group in the decomposition.
@@ -71,6 +77,9 @@ static GROUP_CH3: Group = Group {
     vw: 13.67,
     ecoh: 4500.0,
     ri: 5.67,
+    ed: 4500.0,
+    ep: 0.0,
+    eh: 0.0,
 };
 
 /// Methylene group -CH2-.
@@ -81,6 +90,9 @@ static GROUP_CH2: Group = Group {
     vw: 10.23,
     ecoh: 4100.0,
     ri: 4.65,
+    ed: 4100.0,
+    ep: 0.0,
+    eh: 0.0,
 };
 
 /// Methine group -CH<.
@@ -91,6 +103,9 @@ static GROUP_CH: Group = Group {
     vw: 6.78,
     ecoh: 3400.0,
     ri: 3.63,
+    ed: 3400.0,
+    ep: 0.0,
+    eh: 0.0,
 };
 
 /// Quaternary carbon >C<.
@@ -101,6 +116,9 @@ static GROUP_C: Group = Group {
     vw: 3.33,
     ecoh: 2100.0,
     ri: 2.61,
+    ed: 2100.0,
+    ep: 0.0,
+    eh: 0.0,
 };
 
 /// Phenyl group -C6H5 (pendant aromatic ring).
@@ -111,6 +129,9 @@ static GROUP_PHENYL: Group = Group {
     vw: 71.6,
     ecoh: 31900.0,
     ri: 25.93,
+    ed: 31900.0,
+    ep: 0.0,
+    eh: 0.0,
 };
 
 /// Para-phenylene group -C6H4- (in-chain aromatic ring).
@@ -121,6 +142,9 @@ static GROUP_PHENYLENE: Group = Group {
     vw: 67.0,
     ecoh: 31500.0,
     ri: 24.5,
+    ed: 31500.0,
+    ep: 0.0,
+    eh: 0.0,
 };
 
 /// Ether group -O-.
@@ -131,6 +155,9 @@ static GROUP_ETHER: Group = Group {
     vw: 5.0,
     ecoh: 4200.0,
     ri: 1.64,
+    ed: 1600.0,
+    ep: 1600.0,
+    eh: 1000.0,
 };
 
 /// Ester group -COO-.
@@ -141,6 +168,9 @@ static GROUP_ESTER: Group = Group {
     vw: 22.0,
     ecoh: 18000.0,
     ri: 6.38,
+    ed: 8000.0,
+    ep: 5000.0,
+    eh: 5000.0,
 };
 
 /// Ketone group -CO-.
@@ -151,6 +181,9 @@ static GROUP_KETONE: Group = Group {
     vw: 17.0,
     ecoh: 17400.0,
     ri: 4.6,
+    ed: 7400.0,
+    ep: 6000.0,
+    eh: 4000.0,
 };
 
 /// Hydroxyl group -OH.
@@ -161,6 +194,9 @@ static GROUP_OH: Group = Group {
     vw: 10.0,
     ecoh: 29800.0,
     ri: 2.75,
+    ed: 4800.0,
+    ep: 3000.0,
+    eh: 22000.0,
 };
 
 /// Carboxylic acid group -COOH.
@@ -171,6 +207,9 @@ static GROUP_COOH: Group = Group {
     vw: 28.5,
     ecoh: 27000.0,
     ri: 6.42,
+    ed: 7000.0,
+    ep: 5000.0,
+    eh: 15000.0,
 };
 
 /// Secondary amide group -CONH-.
@@ -181,6 +220,9 @@ static GROUP_AMIDE: Group = Group {
     vw: 23.6,
     ecoh: 36000.0,
     ri: 7.35,
+    ed: 8000.0,
+    ep: 6000.0,
+    eh: 22000.0,
 };
 
 /// Primary amide group -CONH2.
@@ -191,6 +233,9 @@ static GROUP_AMIDE_PRIMARY: Group = Group {
     vw: 23.6,
     ecoh: 50000.0,
     ri: 7.35,
+    ed: 10000.0,
+    ep: 8000.0,
+    eh: 32000.0,
 };
 
 /// Nitrile group -CN.
@@ -201,6 +246,9 @@ static GROUP_CN: Group = Group {
     vw: 15.0,
     ecoh: 24000.0,
     ri: 5.55,
+    ed: 8000.0,
+    ep: 14000.0,
+    eh: 2000.0,
 };
 
 /// Chloro group -Cl.
@@ -211,6 +259,9 @@ static GROUP_CL: Group = Group {
     vw: 12.0,
     ecoh: 12800.0,
     ri: 5.84,
+    ed: 8800.0,
+    ep: 4000.0,
+    eh: 0.0,
 };
 
 /// Fluoro group -F.
@@ -221,6 +272,9 @@ static GROUP_F: Group = Group {
     vw: 5.8,
     ecoh: 4200.0,
     ri: 0.81,
+    ed: 3200.0,
+    ep: 1000.0,
+    eh: 0.0,
 };
 
 /// Siloxane group -Si-O-.
@@ -231,6 +285,9 @@ static GROUP_SILOXANE: Group = Group {
     vw: 21.0,
     ecoh: 4200.0,
     ri: 6.5,
+    ed: 2200.0,
+    ep: 1000.0,
+    eh: 1000.0,
 };
 
 // ---------------------------------------------------------------------------
@@ -554,6 +611,21 @@ pub fn total_ecoh(groups: &[GroupMatch]) -> f64 {
 /// Total molar refraction (cm^3/mol) from group contributions.
 pub fn total_ri(groups: &[GroupMatch]) -> f64 {
     sum_contribution(groups, |g| g.ri)
+}
+
+/// Total dispersive cohesive energy (J/mol) from group contributions.
+pub fn total_ed(groups: &[GroupMatch]) -> f64 {
+    sum_contribution(groups, |g| g.ed)
+}
+
+/// Total polar cohesive energy (J/mol) from group contributions.
+pub fn total_ep(groups: &[GroupMatch]) -> f64 {
+    sum_contribution(groups, |g| g.ep)
+}
+
+/// Total hydrogen-bonding cohesive energy (J/mol) from group contributions.
+pub fn total_eh(groups: &[GroupMatch]) -> f64 {
+    sum_contribution(groups, |g| g.eh)
 }
 
 // ---------------------------------------------------------------------------
