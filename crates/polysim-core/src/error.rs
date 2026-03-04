@@ -18,12 +18,18 @@ pub enum PolySimError {
 
     /// The stochastic object contains the wrong number of repeat units for the
     /// requested architecture.
-    #[error("Incompatible repeat unit count for {architecture}: got {got}, need {need}")]
+    #[error(
+        "Incompatible repeat unit count for {architecture}: got {got}, need at least {need_min}"
+    )]
     RepeatUnitCount {
         architecture: &'static str,
         got: usize,
-        need: usize,
+        need_min: usize,
     },
+
+    /// The block ratios supplied to a block copolymer ensemble do not sum to 1.0.
+    #[error("Block ratios must sum to 1.0 (got {sum:.4})")]
+    InvalidBlockRatios { sum: f64 },
 
     /// The weight fractions supplied to a copolymer builder do not sum to 1.0.
     #[error("Weight fractions must sum to 1.0 (got {sum:.4})")]

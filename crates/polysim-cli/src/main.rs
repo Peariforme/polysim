@@ -28,13 +28,13 @@ enum Commands {
     /// Mn, Mw, dispersity, molecular formula, monoisotopic mass, and atom count.
     Analyze {
         /// BigSMILES string, e.g. "{[]CC[]}" for polyethylene.
-        ///
-        /// The stochastic object {…} must contain exactly one repeat unit
-        /// (homopolymer). Copolymers will be supported in a future release.
         bigsmiles: String,
 
         #[command(flatten)]
         strategy: StrategyArgs,
+
+        #[command(flatten)]
+        arch: ArchitectureArgs,
     },
 
     /// Generate a polydisperse ensemble of polymer chains.
@@ -64,6 +64,9 @@ enum Commands {
         /// Random seed for reproducible results.
         #[arg(long)]
         seed: Option<u64>,
+
+        #[command(flatten)]
+        arch: ArchitectureArgs,
     },
 }
 
@@ -108,6 +111,94 @@ impl StrategyArgs {
     }
 }
 
+/// Polymer architecture and copolymer parameters.
+#[derive(Args)]
+pub(crate) struct ArchitectureArgs {
+    /// Polymer architecture.
+    #[arg(
+        long,
+        value_enum,
+        default_value = "homo",
+        help_heading = "Architecture"
+    )]
+    pub(crate) arch: Architecture,
+
+    /// Weight fractions for random copolymer (comma-separated, e.g. "0.6,0.4").
+    #[arg(long, value_delimiter = ',', help_heading = "Architecture")]
+    pub(crate) fractions: Option<Vec<f64>>,
+
+    /// Block lengths for block copolymer analysis (comma-separated, e.g. "50,30").
+    #[arg(long, value_delimiter = ',', help_heading = "Architecture")]
+    pub(crate) block_lengths: Option<Vec<usize>>,
+
+    /// Block ratios for block copolymer ensemble (comma-separated, e.g. "0.5,0.5").
+    #[arg(long, value_delimiter = ',', help_heading = "Architecture")]
+    pub(crate) block_ratios: Option<Vec<f64>>,
+
+    /// Random seed for reproducible random/gradient copolymers.
+    #[arg(long, help_heading = "Architecture")]
+    pub(crate) copolymer_seed: Option<u64>,
+
+    /// Gradient profile shape (for --arch gradient).
+    #[arg(
+        long,
+        value_enum,
+        default_value = "linear",
+        help_heading = "Architecture"
+    )]
+    pub(crate) gradient_profile: GradientProfileKind,
+
+    /// Starting fraction of monomer A (for --arch gradient).
+    #[arg(long, default_value = "1.0", help_heading = "Architecture")]
+    pub(crate) gradient_f_start: f64,
+
+    /// Ending fraction of monomer A (for --arch gradient).
+    #[arg(long, default_value = "0.0", help_heading = "Architecture")]
+    pub(crate) gradient_f_end: f64,
+}
+
+impl ArchitectureArgs {
+    pub(crate) fn gradient_profile(&self) -> polysim_core::GradientProfile {
+        match self.gradient_profile {
+            GradientProfileKind::Linear => polysim_core::GradientProfile::Linear {
+                f_start: self.gradient_f_start,
+                f_end: self.gradient_f_end,
+            },
+            GradientProfileKind::Sigmoid => polysim_core::GradientProfile::Sigmoid {
+                f_start: self.gradient_f_start,
+                f_end: self.gradient_f_end,
+            },
+        }
+    }
+}
+
+#[derive(Clone, ValueEnum)]
+pub(crate) enum GradientProfileKind {
+    Linear,
+    Sigmoid,
+}
+
+#[derive(Clone, ValueEnum)]
+pub(crate) enum Architecture {
+    Homo,
+    Random,
+    Alternating,
+    Block,
+    Gradient,
+}
+
+impl Architecture {
+    pub(crate) fn label(&self) -> &'static str {
+        match self {
+            Self::Homo => "Homopolymer",
+            Self::Random => "Random copolymer",
+            Self::Alternating => "Alternating copolymer",
+            Self::Block => "Block copolymer",
+            Self::Gradient => "Gradient copolymer",
+        }
+    }
+}
+
 #[derive(Clone, ValueEnum)]
 pub(crate) enum DistributionKind {
     Flory,
@@ -131,8 +222,9 @@ fn main() {
         Commands::Analyze {
             bigsmiles,
             strategy,
+            arch,
         } => {
-            if let Err(code) = commands::analyze::run(&bigsmiles, &strategy) {
+            if let Err(code) = commands::analyze::run(&bigsmiles, &strategy, &arch) {
                 std::process::exit(code);
             }
         }
@@ -143,9 +235,10 @@ fn main() {
             distribution,
             num_chains,
             seed,
+            arch,
         } => {
             if let Err(code) =
-                commands::generate::run(&bigsmiles, mn, pdi, &distribution, num_chains, seed)
+                commands::generate::run(&bigsmiles, mn, pdi, &distribution, num_chains, seed, &arch)
             {
                 std::process::exit(code);
             }

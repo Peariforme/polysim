@@ -10,4 +10,5 @@ pub mod linear;
 pub mod strategy;
 
 pub use ensemble::EnsembleBuilder;
+pub use linear::GradientProfile;
 pub use strategy::BuildStrategy;

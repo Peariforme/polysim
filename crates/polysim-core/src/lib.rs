@@ -39,7 +39,7 @@ pub mod polymer;
 pub mod properties;
 
 pub use bigsmiles::{parse, BigSmiles};
-pub use builder::{BuildStrategy, EnsembleBuilder};
+pub use builder::{BuildStrategy, EnsembleBuilder, GradientProfile};
 pub use distribution::ChainLengthDistribution;
 pub use error::PolySimError;
-pub use polymer::{PolymerChain, PolymerEnsemble};
+pub use polymer::{Architecture, MonomerUnit, PolymerChain, PolymerEnsemble};

@@ -26,6 +26,7 @@ fn print_banner() {
 
 fn print_summary(r: &AnalysisResult) {
     println!("  {:<11}{}", "BigSMILES".bold(), r.bigsmiles_str.yellow());
+    println!("  {:<11}{}", "Arch".bold(), r.architecture_label.cyan());
     println!("  {:<11}{}", "Strategy".bold(), r.strategy_label);
     if let Some(ref bb) = r.begin_block {
         println!("  {:<11}{}", "Begin".bold(), bb.yellow());
@@ -131,19 +132,27 @@ fn add_mono_rows(table: &mut Table, r: &AnalysisResult) {
 
 // ═══ Ensemble report ═════════════════════════════════════════════════════════
 
-use crate::DistributionKind;
+use crate::{Architecture, DistributionKind};
 use polysim_core::properties::ensemble::EnsembleStats;
 
 /// Prints the ensemble generation report to stdout.
 pub fn print_ensemble_report(
     bigsmiles_str: &str,
     distribution: &DistributionKind,
+    architecture: &Architecture,
     target_mn: f64,
     target_pdi: f64,
     stats: &EnsembleStats,
 ) {
     print_ensemble_banner();
-    print_ensemble_summary(bigsmiles_str, distribution, target_mn, target_pdi, stats);
+    print_ensemble_summary(
+        bigsmiles_str,
+        distribution,
+        architecture,
+        target_mn,
+        target_pdi,
+        stats,
+    );
     print_ensemble_table(stats, target_mn, target_pdi);
     println!();
 }
@@ -161,11 +170,13 @@ fn print_ensemble_banner() {
 fn print_ensemble_summary(
     bigsmiles_str: &str,
     distribution: &DistributionKind,
+    architecture: &Architecture,
     target_mn: f64,
     target_pdi: f64,
     stats: &EnsembleStats,
 ) {
     println!("  {:<15}{}", "BigSMILES".bold(), bigsmiles_str.yellow());
+    println!("  {:<15}{}", "Arch".bold(), architecture.label().cyan());
     println!(
         "  {:<15}{}",
         "Distribution".bold(),

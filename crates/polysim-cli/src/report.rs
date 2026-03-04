@@ -2,6 +2,7 @@
 pub struct AnalysisResult {
     pub bigsmiles_str: String,
     pub strategy_label: String,
+    pub architecture_label: String,
     pub begin_block: Option<String>,
     pub end_block: Option<String>,
     pub smiles: String,

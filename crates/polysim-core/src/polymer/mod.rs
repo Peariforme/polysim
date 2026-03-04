@@ -3,5 +3,5 @@
 pub mod chain;
 pub mod ensemble;
 
-pub use chain::PolymerChain;
+pub use chain::{Architecture, MonomerUnit, PolymerChain};
 pub use ensemble::PolymerEnsemble;
