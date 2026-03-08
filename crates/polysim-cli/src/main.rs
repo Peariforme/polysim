@@ -22,6 +22,25 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Predict physical properties of a polymer chain.
+    ///
+    /// Generates a single ideal chain and computes physical/chemical properties
+    /// using group-contribution methods (Van Krevelen).
+    Properties {
+        /// BigSMILES string, e.g. "{[]CC[]}" for polyethylene.
+        bigsmiles: String,
+
+        #[command(flatten)]
+        strategy: StrategyArgs,
+
+        #[command(flatten)]
+        arch: ArchitectureArgs,
+
+        /// Output format.
+        #[arg(long, value_enum, default_value = "table")]
+        format: OutputFormat,
+    },
+
     /// Analyze a polymer chain from a BigSMILES string.
     ///
     /// Generates a single ideal chain and computes its properties:
@@ -200,6 +219,13 @@ impl Architecture {
 }
 
 #[derive(Clone, ValueEnum)]
+pub(crate) enum OutputFormat {
+    Table,
+    Json,
+    Csv,
+}
+
+#[derive(Clone, ValueEnum)]
 pub(crate) enum DistributionKind {
     Flory,
     LogNormal,
@@ -219,6 +245,16 @@ impl DistributionKind {
 fn main() {
     let cli = Cli::parse();
     match cli.command {
+        Commands::Properties {
+            bigsmiles,
+            strategy,
+            arch,
+            format,
+        } => {
+            if let Err(code) = commands::properties::run(&bigsmiles, &strategy, &arch, &format) {
+                std::process::exit(code);
+            }
+        }
         Commands::Analyze {
             bigsmiles,
             strategy,

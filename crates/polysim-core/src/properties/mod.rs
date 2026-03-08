@@ -9,4 +9,6 @@ pub mod mechanical;
 pub mod molecular_weight;
 pub mod optical;
 pub mod solubility;
+pub mod surface;
 pub mod thermal;
+pub mod viscosity;

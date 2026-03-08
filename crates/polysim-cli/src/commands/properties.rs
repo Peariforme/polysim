@@ -104,11 +104,7 @@ fn print_table(
     println!();
 
     println!("  {:<11}{}", "BigSMILES".bold(), bigsmiles_str.yellow());
-    println!(
-        "  {:<11}{}",
-        "Arch".bold(),
-        arch_args.arch.label().cyan()
-    );
+    println!("  {:<11}{}", "Arch".bold(), arch_args.arch.label().cyan());
     println!("  {:<11}{}", "Strategy".bold(), args.label());
     println!();
 
@@ -269,7 +265,10 @@ fn tendency_label(t: CrystallizationTendency) -> String {
 
 fn print_json(p: &PropertySet) {
     let obj = to_json_value(p);
-    println!("{}", serde_json::to_string_pretty(&obj).expect("JSON serialization"));
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&obj).expect("JSON serialization")
+    );
 }
 
 fn to_json_value(p: &PropertySet) -> serde_json::Value {
@@ -326,10 +325,7 @@ fn print_csv(p: &PropertySet) {
     println!("property,value,unit,confidence");
     csv_row("tg", p.tg, "K", 3);
     csv_row("tm", p.tm, "K", 2);
-    println!(
-        "crystallization,{},, 1",
-        tendency_label(p.crystallization)
-    );
+    println!("crystallization,{},, 1", tendency_label(p.crystallization));
     csv_row("density", p.rho, "g/cm3", 3);
     csv_row("youngs_modulus", p.youngs, "GPa", 1);
     csv_row("tensile_strength", p.tensile, "MPa", 1);
