@@ -182,6 +182,95 @@ fn has_high_symmetry(chain: &PolymerChain) -> bool {
         .all(|gm| aliphatic_names.contains(&gm.group.name))
 }
 
+/// Thermal expansion coefficient α (1/K) at 298 K via Van Krevelen group contributions.
+///
+/// α = Σ(αᵢ · countᵢ) / M₀  where M₀ = average_mass(chain)
+///
+/// # Errors
+///
+/// Returns `PolySimError::GroupDecomposition` if group decomposition fails.
+///
+/// # Reference
+///
+/// Van Krevelen, D. W. & te Nijenhuis, K. (2009).
+/// *Properties of Polymers*, 4th ed., Elsevier. Chapter 5.
+pub fn thermal_expansion_coefficient(chain: &PolymerChain) -> Result<f64, PolySimError> {
+    let groups = GroupDatabase::decompose(chain)?;
+    // Contributions αᵢ in K⁻¹ per group (Van Krevelen Ch. 5).
+    let alpha_contrib: f64 = groups
+        .iter()
+        .map(|gm| {
+            let a = match gm.group.name {
+                "-CH3" => 35.0e-6,
+                "-CH2-" => 30.0e-6,
+                "-CH<" => 20.0e-6,
+                ">C<" => 10.0e-6,
+                "-C6H5" => 150.0e-6,
+                "-C6H4-" => 130.0e-6,
+                "-COO-" => 70.0e-6,
+                "-CO-" => 50.0e-6,
+                "-O-" => 20.0e-6,
+                "-OH" => 60.0e-6,
+                "-COOH" => 80.0e-6,
+                "-CONH-" => 60.0e-6,
+                "-CONH2" => 60.0e-6,
+                "-CN" => 50.0e-6,
+                "-Cl" => 40.0e-6,
+                "-F" => 25.0e-6,
+                "-SiO-" => 120.0e-6,
+                _ => 30.0e-6,
+            };
+            a * gm.count as f64
+        })
+        .sum();
+    let m0 = average_mass(chain);
+    Ok(alpha_contrib / m0)
+}
+
+/// Specific heat capacity Cp (J/g·K) at 298 K via Van Krevelen group contributions.
+///
+/// Cp = Σ(cpᵢ · countᵢ) / M₀  where cpᵢ in J/mol·K and M₀ = average_mass(chain) in g/mol.
+///
+/// # Errors
+///
+/// Returns `PolySimError::GroupDecomposition` if group decomposition fails.
+///
+/// # Reference
+///
+/// Van Krevelen, D. W. & te Nijenhuis, K. (2009).
+/// *Properties of Polymers*, 4th ed., Elsevier. Chapter 5.
+pub fn specific_heat_capacity(chain: &PolymerChain) -> Result<f64, PolySimError> {
+    let groups = GroupDatabase::decompose(chain)?;
+    let cp_contrib: f64 = groups
+        .iter()
+        .map(|gm| {
+            let cp = match gm.group.name {
+                "-CH3" => 36.0,
+                "-CH2-" => 28.0,
+                "-CH<" => 18.0,
+                ">C<" => 10.0,
+                "-C6H5" => 120.0,
+                "-C6H4-" => 110.0,
+                "-COO-" => 60.0,
+                "-CO-" => 50.0,
+                "-O-" => 20.0,
+                "-OH" => 45.0,
+                "-COOH" => 70.0,
+                "-CONH-" => 65.0,
+                "-CONH2" => 70.0,
+                "-CN" => 40.0,
+                "-Cl" => 35.0,
+                "-F" => 20.0,
+                "-SiO-" => 45.0,
+                _ => 28.0,
+            };
+            cp * gm.count as f64
+        })
+        .sum();
+    let m0 = average_mass(chain);
+    Ok(cp_contrib / m0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

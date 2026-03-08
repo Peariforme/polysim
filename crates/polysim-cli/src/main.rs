@@ -56,6 +56,26 @@ enum Commands {
         arch: ArchitectureArgs,
     },
 
+    /// Compare physical properties of two or more polymer chains side-by-side.
+    ///
+    /// Generates ideal chains for each BigSMILES input and displays a comparative
+    /// table highlighting the best value for each property.
+    Compare {
+        /// Two or more BigSMILES strings to compare, e.g. "{[]CC[]}" "{[]C(Cl)C[]}".
+        #[arg(required = true, num_args = 2..)]
+        polymers: Vec<String>,
+
+        #[command(flatten)]
+        strategy: StrategyArgs,
+
+        #[command(flatten)]
+        arch: ArchitectureArgs,
+
+        /// Output format.
+        #[arg(long, value_enum, default_value = "table")]
+        format: OutputFormat,
+    },
+
     /// Generate a polydisperse ensemble of polymer chains.
     ///
     /// Samples chain lengths from a statistical distribution and reports
@@ -261,6 +281,16 @@ fn main() {
             arch,
         } => {
             if let Err(code) = commands::analyze::run(&bigsmiles, &strategy, &arch) {
+                std::process::exit(code);
+            }
+        }
+        Commands::Compare {
+            polymers,
+            strategy,
+            arch,
+            format,
+        } => {
+            if let Err(code) = commands::compare::run(&polymers, &strategy, &arch, &format) {
                 std::process::exit(code);
             }
         }
