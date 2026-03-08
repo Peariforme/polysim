@@ -13,6 +13,7 @@ use opensmiles::{
     ast::{BondType, Molecule},
     parse as parse_smiles,
 };
+use serde::Deserialize;
 
 use crate::error::PolySimError;
 use crate::polymer::PolymerChain;
@@ -47,6 +48,10 @@ pub struct Group {
     pub eh: f64,
     /// Rao function for Young's modulus prediction.
     pub rao: f64,
+    /// Parachor contribution for surface tension prediction (cm^3·(mN/m)^(1/4)/mol).
+    pub parachor: f64,
+    /// Molar electronic polarization for dielectric constant (cm^3/mol).
+    pub pe: f64,
 }
 
 /// Result of matching a single group in the decomposition.
@@ -83,6 +88,8 @@ static GROUP_CH3: Group = Group {
     ep: 0.0,
     eh: 0.0,
     rao: 1040.0,
+    parachor: 55.5,
+    pe: 5.67,
 };
 
 /// Methylene group -CH2-.
@@ -97,6 +104,8 @@ static GROUP_CH2: Group = Group {
     ep: 0.0,
     eh: 0.0,
     rao: 880.0,
+    parachor: 40.0,
+    pe: 4.65,
 };
 
 /// Methine group -CH<.
@@ -111,6 +120,8 @@ static GROUP_CH: Group = Group {
     ep: 0.0,
     eh: 0.0,
     rao: 720.0,
+    parachor: 24.5,
+    pe: 3.63,
 };
 
 /// Quaternary carbon >C<.
@@ -125,6 +136,8 @@ static GROUP_C: Group = Group {
     ep: 0.0,
     eh: 0.0,
     rao: 560.0,
+    parachor: 9.0,
+    pe: 2.61,
 };
 
 /// Phenyl group -C6H5 (pendant aromatic ring).
@@ -139,6 +152,8 @@ static GROUP_PHENYL: Group = Group {
     ep: 0.0,
     eh: 0.0,
     rao: 5320.0,
+    parachor: 189.6,
+    pe: 25.93,
 };
 
 /// Para-phenylene group -C6H4- (in-chain aromatic ring).
@@ -153,6 +168,8 @@ static GROUP_PHENYLENE: Group = Group {
     ep: 0.0,
     eh: 0.0,
     rao: 5160.0,
+    parachor: 174.1,
+    pe: 24.5,
 };
 
 /// Ether group -O-.
@@ -167,6 +184,8 @@ static GROUP_ETHER: Group = Group {
     ep: 1600.0,
     eh: 1000.0,
     rao: 440.0,
+    parachor: 20.0,
+    pe: 1.64,
 };
 
 /// Ester group -COO-.
@@ -181,6 +200,8 @@ static GROUP_ESTER: Group = Group {
     ep: 5000.0,
     eh: 3000.0,
     rao: 1460.0,
+    parachor: 63.8,
+    pe: 6.38,
 };
 
 /// Ketone group -CO-.
@@ -195,6 +216,8 @@ static GROUP_KETONE: Group = Group {
     ep: 6000.0,
     eh: 4000.0,
     rao: 1020.0,
+    parachor: 49.0,
+    pe: 4.6,
 };
 
 /// Hydroxyl group -OH.
@@ -209,6 +232,8 @@ static GROUP_OH: Group = Group {
     ep: 3000.0,
     eh: 22000.0,
     rao: 540.0,
+    parachor: 29.8,
+    pe: 2.75,
 };
 
 /// Carboxylic acid group -COOH.
@@ -223,6 +248,8 @@ static GROUP_COOH: Group = Group {
     ep: 5000.0,
     eh: 15000.0,
     rao: 1560.0,
+    parachor: 73.8,
+    pe: 6.42,
 };
 
 /// Secondary amide group -CONH-.
@@ -237,6 +264,8 @@ static GROUP_AMIDE: Group = Group {
     ep: 6000.0,
     eh: 22000.0,
     rao: 1720.0,
+    parachor: 73.0,
+    pe: 7.35,
 };
 
 /// Primary amide group -CONH2.
@@ -251,6 +280,8 @@ static GROUP_AMIDE_PRIMARY: Group = Group {
     ep: 8000.0,
     eh: 32000.0,
     rao: 2060.0,
+    parachor: 88.5,
+    pe: 7.35,
 };
 
 /// Nitrile group -CN.
@@ -265,6 +296,8 @@ static GROUP_CN: Group = Group {
     ep: 14000.0,
     eh: 2000.0,
     rao: 1440.0,
+    parachor: 42.5,
+    pe: 5.55,
 };
 
 /// Chloro group -Cl.
@@ -279,6 +312,8 @@ static GROUP_CL: Group = Group {
     ep: 4000.0,
     eh: 0.0,
     rao: 840.0,
+    parachor: 55.2,
+    pe: 5.84,
 };
 
 /// Fluoro group -F.
@@ -293,6 +328,8 @@ static GROUP_F: Group = Group {
     ep: 1000.0,
     eh: 0.0,
     rao: 320.0,
+    parachor: 25.7,
+    pe: 0.81,
 };
 
 /// Siloxane group -Si-O-.
@@ -307,17 +344,140 @@ static GROUP_SILOXANE: Group = Group {
     ep: 1000.0,
     eh: 1000.0,
     rao: 1200.0,
+    parachor: 45.0,
+    pe: 6.5,
 };
 
 // ---------------------------------------------------------------------------
 // Group database & SMILES decomposition
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// TOML deserialization types
+// ---------------------------------------------------------------------------
+
+/// A custom group definition loaded from TOML.
+#[derive(Debug, Clone, Deserialize)]
+pub struct TomlGroup {
+    /// Human-readable name.
+    pub name: String,
+    /// SMARTS pattern (informational; matching still uses the built-in algorithm).
+    #[serde(default)]
+    pub smarts: String,
+    /// Molar contribution to Tg (K * g/mol).
+    pub yg: f64,
+    /// Molar contribution to Tm (K * g/mol).
+    #[serde(default)]
+    pub ym: f64,
+    /// Van der Waals volume (cm^3/mol).
+    pub vw: f64,
+    /// Cohesive energy (J/mol).
+    pub ecoh: f64,
+    /// Molar refraction (cm^3/mol).
+    #[serde(default)]
+    pub ri: f64,
+    /// Dispersive cohesive energy (J/mol).
+    #[serde(default)]
+    pub ed: f64,
+    /// Polar cohesive energy (J/mol).
+    #[serde(default)]
+    pub ep: f64,
+    /// Hydrogen-bonding cohesive energy (J/mol).
+    #[serde(default)]
+    pub eh: f64,
+    /// Rao function.
+    #[serde(default)]
+    pub rao: f64,
+    /// Parachor.
+    #[serde(default)]
+    pub parachor: f64,
+    /// Molar electronic polarization.
+    #[serde(default)]
+    pub pe: f64,
+}
+
+/// Root structure for TOML group database files.
+#[derive(Debug, Clone, Deserialize)]
+struct TomlGroupDatabase {
+    groups: Vec<TomlGroup>,
+}
+
 /// Database of Van Krevelen functional groups with SMILES decomposition logic.
 ///
 /// The database decomposes a SMILES string into its constituent functional
 /// groups by analysing atom types, bond connectivity, and ring membership.
-pub struct GroupDatabase;
+///
+/// Custom groups can be loaded from TOML files and merged with the defaults.
+#[derive(Debug, Clone, Default)]
+pub struct GroupDatabase {
+    custom_groups: Vec<TomlGroup>,
+}
+
+impl GroupDatabase {
+    /// Creates a new empty `GroupDatabase` with only the built-in groups.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Loads a custom group database from a TOML file.
+    ///
+    /// The TOML file should contain an array of `[[groups]]` entries.
+    /// Validates that `yg > 0`, `vw > 0`, and `ecoh > 0` for each group.
+    ///
+    /// # Errors
+    ///
+    /// Returns `PolySimError::GroupDecomposition` if the file cannot be read,
+    /// parsed, or contains invalid values.
+    pub fn from_toml(path: &std::path::Path) -> Result<Self, PolySimError> {
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| PolySimError::GroupDecomposition(format!("cannot read TOML file: {e}")))?;
+        let db: TomlGroupDatabase = toml::from_str(&content)
+            .map_err(|e| PolySimError::GroupDecomposition(format!("invalid TOML: {e}")))?;
+
+        for g in &db.groups {
+            if g.yg <= 0.0 {
+                return Err(PolySimError::GroupDecomposition(format!(
+                    "group '{}': yg must be > 0 (got {})",
+                    g.name, g.yg
+                )));
+            }
+            if g.vw <= 0.0 {
+                return Err(PolySimError::GroupDecomposition(format!(
+                    "group '{}': vw must be > 0 (got {})",
+                    g.name, g.vw
+                )));
+            }
+            if g.ecoh <= 0.0 {
+                return Err(PolySimError::GroupDecomposition(format!(
+                    "group '{}': ecoh must be > 0 (got {})",
+                    g.name, g.ecoh
+                )));
+            }
+        }
+
+        Ok(Self {
+            custom_groups: db.groups,
+        })
+    }
+
+    /// Merges another `GroupDatabase` into this one.
+    ///
+    /// Custom groups from `other` are appended. If a group with the same name
+    /// already exists, the version from `other` replaces it.
+    pub fn merge(&mut self, other: GroupDatabase) {
+        for new_group in other.custom_groups {
+            if let Some(existing) = self
+                .custom_groups
+                .iter_mut()
+                .find(|g| g.name == new_group.name)
+            {
+                *existing = new_group;
+            } else {
+                self.custom_groups.push(new_group);
+            }
+        }
+    }
+}
 
 impl GroupDatabase {
     /// Decomposes a polymer chain into functional groups using the opensmiles
@@ -652,6 +812,16 @@ pub fn total_rao(groups: &[GroupMatch]) -> f64 {
     sum_contribution(groups, |g| g.rao)
 }
 
+/// Total Parachor (surface tension increment) from group contributions.
+pub fn total_parachor(groups: &[GroupMatch]) -> f64 {
+    sum_contribution(groups, |g| g.parachor)
+}
+
+/// Total molar electronic polarization (cm^3/mol) from group contributions.
+pub fn total_pe(groups: &[GroupMatch]) -> f64 {
+    sum_contribution(groups, |g| g.pe)
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -732,5 +902,159 @@ mod tests {
         let vw = total_vw(&groups);
         // 2 * CH3(13.67) + 8 * CH2(10.23) = 27.34 + 81.84 = 109.18
         assert!((vw - 109.18).abs() < 0.1, "Vw = {vw}");
+    }
+
+    #[test]
+    fn from_toml_loads_valid_file() {
+        let dir = std::env::temp_dir().join("polysim_test_toml");
+        let _ = std::fs::create_dir_all(&dir);
+        let path = dir.join("groups.toml");
+        std::fs::write(
+            &path,
+            r#"
+[[groups]]
+name = "custom_ester"
+smarts = "[CX3](=O)O[CX4]"
+yg = 25.0
+ym = 30.0
+vw = 18.0
+ecoh = 18000.0
+ri = 6.38
+ed = 10000.0
+ep = 5000.0
+eh = 3000.0
+parachor = 63.8
+pe = 2.5
+"#,
+        )
+        .unwrap();
+        let db = GroupDatabase::from_toml(&path).unwrap();
+        assert_eq!(db.custom_groups.len(), 1);
+        assert_eq!(db.custom_groups[0].name, "custom_ester");
+        assert!((db.custom_groups[0].yg - 25.0).abs() < f64::EPSILON);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn from_toml_rejects_zero_vw() {
+        let dir = std::env::temp_dir().join("polysim_test_toml_vw");
+        let _ = std::fs::create_dir_all(&dir);
+        let path = dir.join("bad.toml");
+        std::fs::write(
+            &path,
+            r#"
+[[groups]]
+name = "bad"
+yg = 1.0
+vw = 0.0
+ecoh = 100.0
+"#,
+        )
+        .unwrap();
+        assert!(GroupDatabase::from_toml(&path).is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn from_toml_rejects_negative_ecoh() {
+        let dir = std::env::temp_dir().join("polysim_test_toml_ecoh");
+        let _ = std::fs::create_dir_all(&dir);
+        let path = dir.join("bad.toml");
+        std::fs::write(
+            &path,
+            r#"
+[[groups]]
+name = "bad"
+yg = 1.0
+vw = 5.0
+ecoh = -100.0
+"#,
+        )
+        .unwrap();
+        assert!(GroupDatabase::from_toml(&path).is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn merge_replaces_duplicate_names() {
+        let dir = std::env::temp_dir().join("polysim_test_merge");
+        let _ = std::fs::create_dir_all(&dir);
+
+        let path1 = dir.join("a.toml");
+        std::fs::write(
+            &path1,
+            r#"
+[[groups]]
+name = "grp_a"
+yg = 1.0
+vw = 5.0
+ecoh = 100.0
+"#,
+        )
+        .unwrap();
+
+        let path2 = dir.join("b.toml");
+        std::fs::write(
+            &path2,
+            r#"
+[[groups]]
+name = "grp_a"
+yg = 2.0
+vw = 10.0
+ecoh = 200.0
+"#,
+        )
+        .unwrap();
+
+        let mut db1 = GroupDatabase::from_toml(&path1).unwrap();
+        let db2 = GroupDatabase::from_toml(&path2).unwrap();
+        db1.merge(db2);
+        assert_eq!(db1.custom_groups.len(), 1);
+        assert!((db1.custom_groups[0].yg - 2.0).abs() < f64::EPSILON);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn merge_appends_new_groups() {
+        let dir = std::env::temp_dir().join("polysim_test_merge_new");
+        let _ = std::fs::create_dir_all(&dir);
+
+        let path1 = dir.join("a.toml");
+        std::fs::write(
+            &path1,
+            r#"
+[[groups]]
+name = "grp_a"
+yg = 1.0
+vw = 5.0
+ecoh = 100.0
+"#,
+        )
+        .unwrap();
+
+        let path2 = dir.join("b.toml");
+        std::fs::write(
+            &path2,
+            r#"
+[[groups]]
+name = "grp_b"
+yg = 3.0
+vw = 7.0
+ecoh = 300.0
+"#,
+        )
+        .unwrap();
+
+        let mut db1 = GroupDatabase::from_toml(&path1).unwrap();
+        let db2 = GroupDatabase::from_toml(&path2).unwrap();
+        db1.merge(db2);
+        assert_eq!(db1.custom_groups.len(), 2);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn from_toml_missing_file_returns_error() {
+        let path = std::path::Path::new("/tmp/nonexistent_polysim_file.toml");
+        assert!(GroupDatabase::from_toml(path).is_err());
     }
 }

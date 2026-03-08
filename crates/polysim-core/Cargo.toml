@@ -18,6 +18,8 @@ opensmiles = { workspace = true }
 thiserror  = { workspace = true }
 rand       = { workspace = true }
 rand_distr = { workspace = true }
+serde      = { workspace = true }
+toml       = { workspace = true }
 
 [dev-dependencies]
 bigsmiles = { workspace = true }
